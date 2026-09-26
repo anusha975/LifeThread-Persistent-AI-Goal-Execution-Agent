@@ -16,7 +16,26 @@ services:
         value: production
       - key: SECRET_KEY
         generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: POSTGRES_PASSWORD
+        generateValue: true
+      - key: MCP_INTERNAL_TOKEN
+        generateValue: true
       - key: CORS_ORIGINS
         value: "*"
       - key: DATABASE_URL
         value: sqlite+aiosqlite:///lifethread.db
+
+  - type: web
+    name: lifethread-frontend
+    env: static
+    region: oregon
+    branch: main
+    rootDir: frontend
+    buildCommand: npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
