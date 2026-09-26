@@ -48,7 +48,7 @@ jobs:
           python -m pip install -e backend/
           python -m pip install -e agent/
           python -m pip install -e mcp-server/
-          python -m pip install ruff mypy pytest pytest-asyncio aiosqlite
+          python -m pip install ruff mypy pytest pytest-asyncio aiosqlite greenlet
 
       - name: Install Frontend dependencies
         working-directory: frontend
@@ -142,7 +142,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install -e backend/ -e agent/ -e mcp-server/
-          python -m pip install pytest pytest-asyncio aiosqlite
+          python -m pip install pytest pytest-asyncio aiosqlite greenlet
 
       - name: Run Backend Unit Tests
         run: |
@@ -173,7 +173,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install -e backend/ -e agent/ -e mcp-server/
-          python -m pip install pytest pytest-asyncio aiosqlite
+          python -m pip install pytest pytest-asyncio aiosqlite greenlet
 
       - name: Run Agent Scenarios & Comprehensive Integration Tests
         run: |
