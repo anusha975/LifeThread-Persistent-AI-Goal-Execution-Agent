@@ -1,5 +1,5 @@
-import React from 'react';
-import { cn } from '../../utils/cn';
+import React from "react";
+import { cn } from "../../utils/cn";
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -10,7 +10,10 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, helperText, leftIcon, rightIcon, id, ...props }, ref) => {
+  (
+    { className, label, error, helperText, leftIcon, rightIcon, id, ...props },
+    ref,
+  ) => {
     const inputId = id || props.name || Math.random().toString(36).substring(7);
 
     return (
@@ -33,15 +36,15 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             ref={ref}
             className={cn(
-              'w-full bg-slate-900 border text-slate-100 placeholder-slate-500 rounded-lg px-3.5 py-2.5 text-sm transition-colors duration-150',
-              'focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent',
-              'disabled:bg-slate-950 disabled:text-slate-600 disabled:border-slate-800 disabled:cursor-not-allowed',
-              leftIcon ? 'pl-10' : 'pl-3.5',
-              rightIcon ? 'pr-10' : 'pr-3.5',
+              "w-full bg-slate-900 border text-slate-100 placeholder-slate-500 rounded-lg px-3.5 py-2.5 text-sm transition-colors duration-150",
+              "focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent",
+              "disabled:bg-slate-950 disabled:text-slate-600 disabled:border-slate-800 disabled:cursor-not-allowed",
+              leftIcon ? "pl-10" : "pl-3.5",
+              rightIcon ? "pr-10" : "pr-3.5",
               error
-                ? 'border-rose-500/80 focus:ring-rose-500 text-rose-200'
-                : 'border-slate-800 hover:border-slate-700',
-              className
+                ? "border-rose-500/80 focus:ring-rose-500 text-rose-200"
+                : "border-slate-800 hover:border-slate-700",
+              className,
             )}
             {...props}
           />
@@ -52,10 +55,12 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
         {error && <p className="text-xs text-rose-400 font-medium">{error}</p>}
-        {!error && helperText && <p className="text-xs text-slate-500">{helperText}</p>}
+        {!error && helperText && (
+          <p className="text-xs text-slate-500">{helperText}</p>
+        )}
       </div>
     );
-  }
+  },
 );
 
-Input.displayName = 'Input';
+Input.displayName = "Input";

@@ -1,6 +1,7 @@
-import { GoalPriority } from './goal';
+import { GoalPriority } from "./goal";
 
-export type TaskStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'BLOCKED' | 'CANCELLED';
+export type TaskStatus =
+  "PENDING" | "IN_PROGRESS" | "COMPLETED" | "BLOCKED" | "CANCELLED";
 
 export interface Task {
   id: string;

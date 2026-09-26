@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
-import { X } from 'lucide-react';
-import { cn } from '../../utils/cn';
+import React, { useEffect } from "react";
+import { X } from "lucide-react";
+import { cn } from "../../utils/cn";
 
 export interface ModalProps {
   isOpen: boolean;
@@ -8,7 +8,7 @@ export interface ModalProps {
   title?: string;
   description?: string;
   children: React.ReactNode;
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl";
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -17,26 +17,26 @@ export const Modal: React.FC<ModalProps> = ({
   title,
   description,
   children,
-  maxWidth = 'md',
+  maxWidth = "md",
 }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === "Escape" && isOpen) {
         onClose();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
   const maxWidths = {
-    sm: 'max-w-sm',
-    md: 'max-w-md',
-    lg: 'max-w-lg',
-    xl: 'max-w-xl',
-    '2xl': 'max-w-2xl',
+    sm: "max-w-sm",
+    md: "max-w-md",
+    lg: "max-w-lg",
+    xl: "max-w-xl",
+    "2xl": "max-w-2xl",
   };
 
   return (
@@ -53,14 +53,18 @@ export const Modal: React.FC<ModalProps> = ({
         role="dialog"
         aria-modal="true"
         className={cn(
-          'relative w-full rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl p-6 z-10 space-y-4 animate-in fade-in zoom-in-95 duration-150',
-          maxWidths[maxWidth]
+          "relative w-full rounded-2xl bg-slate-900 border border-slate-800 shadow-2xl p-6 z-10 space-y-4 animate-in fade-in zoom-in-95 duration-150",
+          maxWidths[maxWidth],
         )}
       >
         <div className="flex items-center justify-between pb-3 border-b border-slate-800/80">
           <div>
-            {title && <h3 className="text-lg font-semibold text-white">{title}</h3>}
-            {description && <p className="text-xs text-slate-400 mt-0.5">{description}</p>}
+            {title && (
+              <h3 className="text-lg font-semibold text-white">{title}</h3>
+            )}
+            {description && (
+              <p className="text-xs text-slate-400 mt-0.5">{description}</p>
+            )}
           </div>
           <button
             onClick={onClose}

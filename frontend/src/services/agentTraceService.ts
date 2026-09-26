@@ -1,5 +1,5 @@
-import { apiClient } from './apiClient';
-import { AgentRun, AgentRunSummary, EventStatus } from '../types/agentTrace';
+import { apiClient } from "./apiClient";
+import { AgentRun, AgentRunSummary, EventStatus } from "../types/agentTrace";
 
 export interface ListRunsParams {
   goalId?: string;
@@ -10,12 +10,12 @@ export interface ListRunsParams {
 export const agentTraceService = {
   async listRuns(params?: ListRunsParams): Promise<AgentRunSummary[]> {
     const query = new URLSearchParams();
-    if (params?.goalId) query.append('goal_id', params.goalId);
-    if (params?.status) query.append('status', params.status);
-    if (params?.limit) query.append('limit', params.limit.toString());
+    if (params?.goalId) query.append("goal_id", params.goalId);
+    if (params?.status) query.append("status", params.status);
+    if (params?.limit) query.append("limit", params.limit.toString());
 
     const qs = query.toString();
-    const endpoint = qs ? `/agent/runs?${qs}` : '/agent/runs';
+    const endpoint = qs ? `/agent/runs?${qs}` : "/agent/runs";
     return apiClient.get<AgentRunSummary[]>(endpoint);
   },
 

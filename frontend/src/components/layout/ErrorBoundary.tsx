@@ -1,6 +1,6 @@
-import { Component, ErrorInfo, ReactNode } from 'react';
-import { AlertTriangle, RotateCcw } from 'lucide-react';
-import { Button } from '../ui/Button';
+import { Component, ErrorInfo, ReactNode } from "react";
+import { AlertTriangle, RotateCcw } from "lucide-react";
+import { Button } from "../ui/Button";
 
 interface Props {
   children: ReactNode;
@@ -22,7 +22,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    console.error('Uncaught error in component tree:', error, errorInfo);
+    console.error("Uncaught error in component tree:", error, errorInfo);
   }
 
   private handleReset = (): void => {
@@ -38,7 +38,9 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="w-14 h-14 rounded-full bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mx-auto text-rose-400">
               <AlertTriangle className="w-7 h-7" />
             </div>
-            <h2 className="text-xl font-bold text-white">Something went wrong</h2>
+            <h2 className="text-xl font-bold text-white">
+              Something went wrong
+            </h2>
             <p className="text-sm text-slate-400">
               An unexpected error occurred in the application interface.
             </p>
@@ -48,7 +50,10 @@ export class ErrorBoundary extends Component<Props, State> {
               </pre>
             )}
             <div className="pt-2">
-              <Button onClick={this.handleReset} leftIcon={<RotateCcw className="w-4 h-4" />}>
+              <Button
+                onClick={this.handleReset}
+                leftIcon={<RotateCcw className="w-4 h-4" />}
+              >
                 Reload Application
               </Button>
             </div>

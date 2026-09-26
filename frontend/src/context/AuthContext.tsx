@@ -1,7 +1,13 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { AuthState, LoginPayload, RegisterPayload, User } from '../types/auth';
-import { authService } from '../services/authService';
-import { onAuthChange, storage } from '../services/apiClient';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
+import { AuthState, LoginPayload, RegisterPayload, User } from "../types/auth";
+import { authService } from "../services/authService";
+import { onAuthChange, storage } from "../services/apiClient";
 
 interface AuthContextType extends AuthState {
   login: (payload: LoginPayload) => Promise<void>;
@@ -12,7 +18,9 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(storage.getToken());
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -106,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 }

@@ -1,14 +1,14 @@
-import { GoalPriority } from './goal';
+import { GoalPriority } from "./goal";
 
 export type ReplanningReasonType =
-  | 'DEADLINE_CHANGED'
-  | 'AVAILABLE_TIME_CHANGED'
-  | 'TASK_FAILED'
-  | 'TASK_BLOCKED'
-  | 'NEW_REQUIREMENT'
-  | 'NEW_WEAKNESS_DISCOVERED'
-  | 'DEPENDENCY_CHANGED'
-  | 'PRIORITY_CHANGED';
+  | "DEADLINE_CHANGED"
+  | "AVAILABLE_TIME_CHANGED"
+  | "TASK_FAILED"
+  | "TASK_BLOCKED"
+  | "NEW_REQUIREMENT"
+  | "NEW_WEAKNESS_DISCOVERED"
+  | "DEPENDENCY_CHANGED"
+  | "PRIORITY_CHANGED";
 
 export interface TaskRescheduleItem {
   task_id: string;

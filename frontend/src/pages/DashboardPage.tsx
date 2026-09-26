@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import React, { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import {
   AlertTriangle,
   ArrowRight,
@@ -17,41 +17,43 @@ import {
   ShieldCheck,
   Sparkles,
   Target,
-} from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { goalService } from '../services/goalService';
-import { activityService } from '../services/activityService';
-import { Goal, GoalCreatePayload, GoalPriority } from '../types/goal';
-import { EmptyState } from '../components/ui/EmptyState';
+} from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { goalService } from "../services/goalService";
+import { activityService } from "../services/activityService";
+import { Goal, GoalCreatePayload, GoalPriority } from "../types/goal";
+import { EmptyState } from "../components/ui/EmptyState";
 import {
   calculateDeadlineRisk,
   calculateGoalProgress,
   calculateOverallSummary,
   formatRelativeTime,
   getGoalNextAction,
-} from '../utils/dashboardMetrics';
-import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
-import { Progress } from '../components/ui/Progress';
-import { Skeleton } from '../components/ui/Skeleton';
-import { Alert } from '../components/ui/Alert';
-import { Modal } from '../components/ui/Modal';
-import { Input } from '../components/ui/Input';
-import { APIError } from '../types/api';
+} from "../utils/dashboardMetrics";
+import { Button } from "../components/ui/Button";
+import { Badge } from "../components/ui/Badge";
+import { Progress } from "../components/ui/Progress";
+import { Skeleton } from "../components/ui/Skeleton";
+import { Alert } from "../components/ui/Alert";
+import { Modal } from "../components/ui/Modal";
+import { Input } from "../components/ui/Input";
+import { APIError } from "../types/api";
 
 export const DashboardPage: React.FC = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
   // Filter state for active goals grid
-  const [filterPriority, setFilterPriority] = useState<'all' | 'critical_high' | 'with_deadline'>('all');
+  const [filterPriority, setFilterPriority] = useState<
+    "all" | "critical_high" | "with_deadline"
+  >("all");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   // New Goal quick modal state
-  const [newTitle, setNewTitle] = useState('');
-  const [newObjective, setNewObjective] = useState('');
-  const [newPriority, setNewPriority] = useState<GoalPriority>('medium');
-  const [newDeadline, setNewDeadline] = useState('');
+  const [newTitle, setNewTitle] = useState("");
+  const [newObjective, setNewObjective] = useState("");
+  const [newPriority, setNewPriority] = useState<GoalPriority>("medium");
+  const [newDeadline, setNewDeadline] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
 
   // 1. Fetch Goals
@@ -63,7 +65,7 @@ export const DashboardPage: React.FC = () => {
     refetch: refetchGoals,
     isFetching: isFetchingGoals,
   } = useQuery({
-    queryKey: ['goals'],
+    queryKey: ["goals"],
     queryFn: () => goalService.listGoals({ limit: 100 }),
   });
 
@@ -73,49 +75,48 @@ export const DashboardPage: React.FC = () => {
     isLoading: isLoadingActivity,
     refetch: refetchActivity,
   } = useQuery({
-    queryKey: ['dashboardActivity'],
+    queryKey: ["dashboardActivity"],
     queryFn: () => activityService.getCombinedActivityFeed(),
   });
 
   // 3. Fetch Pending Permission Requests
-  const {
-    data: pendingRequests = [],
-    refetch: refetchRequests,
-  } = useQuery({
-    queryKey: ['pendingPermissions'],
+  const { data: pendingRequests = [], refetch: refetchRequests } = useQuery({
+    queryKey: ["pendingPermissions"],
     queryFn: () => activityService.getPendingRequests(),
   });
 
   // Goal Mutations (Pause / Resume / Complete)
   const pauseMutation = useMutation({
     mutationFn: (goalId: string) => goalService.pauseGoal(goalId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['goals'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["goals"] }),
   });
 
   const resumeMutation = useMutation({
     mutationFn: (goalId: string) => goalService.resumeGoal(goalId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['goals'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["goals"] }),
   });
 
   const completeMutation = useMutation({
     mutationFn: (goalId: string) => goalService.completeGoal(goalId),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['goals'] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["goals"] }),
   });
 
   // Permission Approvals Mutations
   const approveRequestMutation = useMutation({
-    mutationFn: (reqId: string) => activityService.approvePermissionRequest(reqId),
+    mutationFn: (reqId: string) =>
+      activityService.approvePermissionRequest(reqId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pendingPermissions'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboardActivity'] });
+      queryClient.invalidateQueries({ queryKey: ["pendingPermissions"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardActivity"] });
     },
   });
 
   const rejectRequestMutation = useMutation({
-    mutationFn: (reqId: string) => activityService.rejectPermissionRequest(reqId),
+    mutationFn: (reqId: string) =>
+      activityService.rejectPermissionRequest(reqId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pendingPermissions'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboardActivity'] });
+      queryClient.invalidateQueries({ queryKey: ["pendingPermissions"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardActivity"] });
     },
   });
 
@@ -123,18 +124,18 @@ export const DashboardPage: React.FC = () => {
   const createMutation = useMutation({
     mutationFn: (payload: GoalCreatePayload) => goalService.createGoal(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['goals'] });
+      queryClient.invalidateQueries({ queryKey: ["goals"] });
       setIsCreateOpen(false);
-      setNewTitle('');
-      setNewObjective('');
-      setNewPriority('medium');
-      setNewDeadline('');
+      setNewTitle("");
+      setNewObjective("");
+      setNewPriority("medium");
+      setNewDeadline("");
     },
     onError: (err: unknown) => {
       if (err instanceof APIError) {
         setFormError(err.message);
       } else {
-        setFormError('Failed to create goal');
+        setFormError("Failed to create goal");
       }
     },
   });
@@ -142,11 +143,11 @@ export const DashboardPage: React.FC = () => {
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newTitle.trim().length < 3) {
-      setFormError('Title must be at least 3 characters');
+      setFormError("Title must be at least 3 characters");
       return;
     }
     if (newObjective.trim().length < 5) {
-      setFormError('Objective must be at least 5 characters');
+      setFormError("Objective must be at least 5 characters");
       return;
     }
 
@@ -164,14 +165,14 @@ export const DashboardPage: React.FC = () => {
   const summary = calculateOverallSummary(goals);
 
   // Active goals list
-  const activeGoals = goals.filter((g) => g.status === 'active');
+  const activeGoals = goals.filter((g) => g.status === "active");
 
   // Filter active goals by selected pill
   const filteredActiveGoals = activeGoals.filter((g) => {
-    if (filterPriority === 'critical_high') {
-      return g.priority === 'critical' || g.priority === 'high';
+    if (filterPriority === "critical_high") {
+      return g.priority === "critical" || g.priority === "high";
     }
-    if (filterPriority === 'with_deadline') {
+    if (filterPriority === "with_deadline") {
       return Boolean(g.deadline);
     }
     return true;
@@ -194,9 +195,13 @@ export const DashboardPage: React.FC = () => {
               <AlertTriangle className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-white">Failed to sync command dashboard</h3>
+              <h3 className="text-sm font-semibold text-white">
+                Failed to sync command dashboard
+              </h3>
               <p className="text-xs text-rose-300/80 mt-0.5">
-                {goalsError instanceof Error ? goalsError.message : 'Unable to retrieve real-time goals telemetry.'}
+                {goalsError instanceof Error
+                  ? goalsError.message
+                  : "Unable to retrieve real-time goals telemetry."}
               </p>
             </div>
           </div>
@@ -236,10 +241,12 @@ export const DashboardPage: React.FC = () => {
                 )}
               </div>
               <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                {user?.display_name || user?.email?.split('@')[0] || 'Operator'}&rsquo;s Command Dashboard
+                {user?.display_name || user?.email?.split("@")[0] || "Operator"}
+                &rsquo;s Command Dashboard
               </h1>
               <p className="text-xs sm:text-sm text-slate-400">
-                Real-time operational awareness across long-horizon objectives, deadlines, and agent execution.
+                Real-time operational awareness across long-horizon objectives,
+                deadlines, and agent execution.
               </p>
             </div>
 
@@ -250,7 +257,9 @@ export const DashboardPage: React.FC = () => {
                 title="Refresh dashboard data"
                 aria-label="Refresh data"
               >
-                <RefreshCw className={`w-4 h-4 ${isFetchingGoals ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`w-4 h-4 ${isFetchingGoals ? "animate-spin" : ""}`}
+                />
               </button>
               <Button
                 onClick={() => setIsCreateOpen(true)}
@@ -267,7 +276,9 @@ export const DashboardPage: React.FC = () => {
             {/* 1. Active Goals Count & Highest Priority */}
             <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2">
               <div className="flex items-center justify-between text-xs font-mono text-slate-400">
-                <span className="uppercase tracking-wider">Active Objectives</span>
+                <span className="uppercase tracking-wider">
+                  Active Objectives
+                </span>
                 <Target className="w-4 h-4 text-emerald-400" />
               </div>
               {isLoadingGoals ? (
@@ -285,7 +296,9 @@ export const DashboardPage: React.FC = () => {
               <div className="flex items-center space-x-1.5 pt-1 text-xs">
                 <span className="text-slate-400">Max Priority:</span>
                 {summary.highestPriority ? (
-                  <Badge variant={summary.highestPriority}>{summary.highestPriority}</Badge>
+                  <Badge variant={summary.highestPriority}>
+                    {summary.highestPriority}
+                  </Badge>
                 ) : (
                   <span className="text-slate-500 font-mono text-xs">None</span>
                 )}
@@ -295,7 +308,9 @@ export const DashboardPage: React.FC = () => {
             {/* 2. Overall Progress */}
             <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2">
               <div className="flex items-center justify-between text-xs font-mono text-slate-400">
-                <span className="uppercase tracking-wider">Overall Progress</span>
+                <span className="uppercase tracking-wider">
+                  Overall Progress
+                </span>
                 <CheckCircle2 className="w-4 h-4 text-teal-400" />
               </div>
               {isLoadingGoals ? (
@@ -307,10 +322,15 @@ export const DashboardPage: React.FC = () => {
                       {summary.overallProgressPercent}%
                     </span>
                     <span className="text-xs text-slate-400 font-mono">
-                      ({summary.completedMilestonesCount}/{summary.totalMilestonesCount} milestones)
+                      ({summary.completedMilestonesCount}/
+                      {summary.totalMilestonesCount} milestones)
                     </span>
                   </div>
-                  <Progress value={summary.overallProgressPercent} size="sm" variant="gradient" />
+                  <Progress
+                    value={summary.overallProgressPercent}
+                    size="sm"
+                    variant="gradient"
+                  />
                 </div>
               )}
             </div>
@@ -318,36 +338,44 @@ export const DashboardPage: React.FC = () => {
             {/* 3. Nearest Deadline & Deadline Risk */}
             <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2">
               <div className="flex items-center justify-between text-xs font-mono text-slate-400">
-                <span className="uppercase tracking-wider">Nearest Deadline</span>
+                <span className="uppercase tracking-wider">
+                  Nearest Deadline
+                </span>
                 <Clock className="w-4 h-4 text-amber-400" />
               </div>
               {isLoadingGoals ? (
                 <Skeleton className="h-8 w-28" />
               ) : summary.nearestDeadline ? (
                 <div>
-                  <div className="text-sm font-bold text-white truncate" title={summary.nearestDeadline.goal.title}>
+                  <div
+                    className="text-sm font-bold text-white truncate"
+                    title={summary.nearestDeadline.goal.title}
+                  >
                     {summary.nearestDeadline.goal.title}
                   </div>
                   <div className="text-xs text-slate-300 font-mono mt-0.5">
-                    {new Date(summary.nearestDeadline.goal.deadline!).toLocaleDateString(undefined, {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
+                    {new Date(
+                      summary.nearestDeadline.goal.deadline!,
+                    ).toLocaleDateString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
                     })}
                   </div>
                   <div className="mt-1">
                     <span
                       className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-medium border ${
-                        summary.nearestDeadline.risk.level === 'critical'
-                          ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
-                          : summary.nearestDeadline.risk.level === 'high'
-                          ? 'bg-orange-500/10 text-orange-400 border-orange-500/30'
-                          : summary.nearestDeadline.risk.level === 'medium'
-                          ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                          : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                        summary.nearestDeadline.risk.level === "critical"
+                          ? "bg-rose-500/10 text-rose-400 border-rose-500/30"
+                          : summary.nearestDeadline.risk.level === "high"
+                            ? "bg-orange-500/10 text-orange-400 border-orange-500/30"
+                            : summary.nearestDeadline.risk.level === "medium"
+                              ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                              : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
                       }`}
                     >
-                      {summary.nearestDeadline.risk.label}: {summary.nearestDeadline.risk.text}
+                      {summary.nearestDeadline.risk.label}:{" "}
+                      {summary.nearestDeadline.risk.text}
                     </span>
                   </div>
                 </div>
@@ -361,7 +389,9 @@ export const DashboardPage: React.FC = () => {
             {/* 4. Immediate Next Action */}
             <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2">
               <div className="flex items-center justify-between text-xs font-mono text-slate-400">
-                <span className="uppercase tracking-wider">Immediate Next Action</span>
+                <span className="uppercase tracking-wider">
+                  Immediate Next Action
+                </span>
                 <Flame className="w-4 h-4 text-orange-400" />
               </div>
               {isLoadingGoals ? (
@@ -369,18 +399,26 @@ export const DashboardPage: React.FC = () => {
               ) : summary.urgentNextAction ? (
                 <div className="space-y-1">
                   <div className="text-xs text-slate-400 truncate">
-                    For: <span className="text-slate-200 font-medium">{summary.urgentNextAction.goal.title}</span>
+                    For:{" "}
+                    <span className="text-slate-200 font-medium">
+                      {summary.urgentNextAction.goal.title}
+                    </span>
                   </div>
                   <div className="text-sm font-semibold text-emerald-300 line-clamp-2">
                     &bull; {summary.urgentNextAction.action.title}
                   </div>
                   <div className="text-[11px] text-slate-500 capitalize">
-                    Status: <span className="font-mono text-slate-400">{summary.urgentNextAction.action.status.replace('_', ' ')}</span>
+                    Status:{" "}
+                    <span className="font-mono text-slate-400">
+                      {summary.urgentNextAction.action.status.replace("_", " ")}
+                    </span>
                   </div>
                 </div>
               ) : (
                 <div className="text-xs text-slate-500 italic mt-2">
-                  {goals.length === 0 ? 'Create a goal to begin' : 'All current milestones resolved'}
+                  {goals.length === 0
+                    ? "Create a goal to begin"
+                    : "All current milestones resolved"}
                 </div>
               )}
             </div>
@@ -395,7 +433,10 @@ export const DashboardPage: React.FC = () => {
       {/* 2. PENDING PERMISSION REQUESTS BANNER (Human-in-the-Loop)                  */}
       {/* ========================================================================= */}
       {pendingRequests.length > 0 && (
-        <section aria-label="Pending Approvals Alert" className="animate-in slide-in-from-top-2">
+        <section
+          aria-label="Pending Approvals Alert"
+          className="animate-in slide-in-from-top-2"
+        >
           <div className="rounded-xl border border-amber-500/40 bg-amber-950/20 p-5 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -407,7 +448,8 @@ export const DashboardPage: React.FC = () => {
                     Action Authorization Required ({pendingRequests.length})
                   </h3>
                   <p className="text-xs text-amber-300/80">
-                    The autonomous agent is requesting human clearance before executing protected actions.
+                    The autonomous agent is requesting human clearance before
+                    executing protected actions.
                   </p>
                 </div>
               </div>
@@ -469,38 +511,39 @@ export const DashboardPage: React.FC = () => {
               <span>Active Goals &amp; Execution State</span>
             </h2>
             <p className="text-xs text-slate-400">
-              Real-time progress, upcoming milestones, and deadline risks for running goals
+              Real-time progress, upcoming milestones, and deadline risks for
+              running goals
             </p>
           </div>
 
           <div className="flex items-center space-x-2">
             <div className="flex items-center space-x-1 bg-slate-900 p-1 rounded-lg border border-slate-800 text-xs">
               <button
-                onClick={() => setFilterPriority('all')}
+                onClick={() => setFilterPriority("all")}
                 className={`px-2.5 py-1 rounded font-medium transition-colors ${
-                  filterPriority === 'all'
-                    ? 'bg-slate-800 text-white'
-                    : 'text-slate-400 hover:text-slate-200'
+                  filterPriority === "all"
+                    ? "bg-slate-800 text-white"
+                    : "text-slate-400 hover:text-slate-200"
                 }`}
               >
                 All Active ({activeGoals.length})
               </button>
               <button
-                onClick={() => setFilterPriority('critical_high')}
+                onClick={() => setFilterPriority("critical_high")}
                 className={`px-2.5 py-1 rounded font-medium transition-colors ${
-                  filterPriority === 'critical_high'
-                    ? 'bg-slate-800 text-white'
-                    : 'text-slate-400 hover:text-slate-200'
+                  filterPriority === "critical_high"
+                    ? "bg-slate-800 text-white"
+                    : "text-slate-400 hover:text-slate-200"
                 }`}
               >
                 Critical &amp; High
               </button>
               <button
-                onClick={() => setFilterPriority('with_deadline')}
+                onClick={() => setFilterPriority("with_deadline")}
                 className={`px-2.5 py-1 rounded font-medium transition-colors ${
-                  filterPriority === 'with_deadline'
-                    ? 'bg-slate-800 text-white'
-                    : 'text-slate-400 hover:text-slate-200'
+                  filterPriority === "with_deadline"
+                    ? "bg-slate-800 text-white"
+                    : "text-slate-400 hover:text-slate-200"
                 }`}
               >
                 With Deadlines
@@ -519,8 +562,14 @@ export const DashboardPage: React.FC = () => {
 
         {/* Error Handling State */}
         {isGoalsError && (
-          <Alert variant="error" title="Failed to load goals" onDismiss={() => refetchGoals()}>
-            {goalsError instanceof Error ? goalsError.message : 'Could not reach backend API.'}
+          <Alert
+            variant="error"
+            title="Failed to load goals"
+            onDismiss={() => refetchGoals()}
+          >
+            {goalsError instanceof Error
+              ? goalsError.message
+              : "Could not reach backend API."}
           </Alert>
         )}
 
@@ -553,7 +602,7 @@ export const DashboardPage: React.FC = () => {
               title="No Goals Defined Yet"
               description="Start by creating your first autonomous mission. LifeThread will track deadlines, priorities, and agent execution."
               action={{
-                label: 'Create New Goal',
+                label: "Create New Goal",
                 icon: Plus,
                 onClick: () => setIsCreateOpen(true),
               }}
@@ -564,11 +613,11 @@ export const DashboardPage: React.FC = () => {
               title="No Goals Match Active Filter"
               description="All defined goals are currently paused, archived, or completed. Reset filter or define a new goal."
               action={{
-                label: 'Reset Filter',
-                onClick: () => setFilterPriority('all'),
+                label: "Reset Filter",
+                onClick: () => setFilterPriority("all"),
               }}
               secondaryAction={{
-                label: 'Create New Goal',
+                label: "Create New Goal",
                 onClick: () => setIsCreateOpen(true),
               }}
             />
@@ -582,7 +631,7 @@ export const DashboardPage: React.FC = () => {
               const deadlineRisk = calculateDeadlineRisk(
                 goal.deadline,
                 progress.progressPercent,
-                goal.status
+                goal.status,
               );
 
               return (
@@ -593,7 +642,9 @@ export const DashboardPage: React.FC = () => {
                   {/* Card Header */}
                   <div className="space-y-2.5">
                     <div className="flex items-start justify-between gap-2">
-                      <Badge variant={goal.priority}>{goal.priority} Priority</Badge>
+                      <Badge variant={goal.priority}>
+                        {goal.priority} Priority
+                      </Badge>
                       <Badge variant={goal.status}>{goal.status}</Badge>
                     </div>
 
@@ -615,7 +666,8 @@ export const DashboardPage: React.FC = () => {
                         {progress.progressPercent}%
                         {progress.hasMilestones && (
                           <span className="text-slate-500 font-normal ml-1">
-                            ({progress.completedMilestones}/{progress.totalMilestones})
+                            ({progress.completedMilestones}/
+                            {progress.totalMilestones})
                           </span>
                         )}
                       </span>
@@ -625,10 +677,10 @@ export const DashboardPage: React.FC = () => {
                       size="sm"
                       variant={
                         progress.progressPercent >= 100
-                          ? 'emerald'
+                          ? "emerald"
                           : progress.progressPercent > 50
-                          ? 'gradient'
-                          : 'blue'
+                            ? "gradient"
+                            : "blue"
                       }
                     />
                   </div>
@@ -637,15 +689,15 @@ export const DashboardPage: React.FC = () => {
                   <div className="p-3 rounded-xl bg-slate-950/70 border border-slate-800/80 space-y-1">
                     <div className="text-[10px] uppercase font-mono tracking-wider text-slate-400 flex items-center justify-between">
                       <span>Next Action</span>
-                      {nextAction.status !== 'none' && (
+                      {nextAction.status !== "none" && (
                         <span
                           className={`text-[9px] px-1.5 py-0.2 rounded font-mono ${
-                            nextAction.status === 'in_progress'
-                              ? 'bg-blue-500/20 text-blue-400'
-                              : 'bg-slate-800 text-slate-400'
+                            nextAction.status === "in_progress"
+                              ? "bg-blue-500/20 text-blue-400"
+                              : "bg-slate-800 text-slate-400"
                           }`}
                         >
-                          {nextAction.status.replace('_', ' ')}
+                          {nextAction.status.replace("_", " ")}
                         </span>
                       )}
                     </div>
@@ -663,11 +715,14 @@ export const DashboardPage: React.FC = () => {
                       </span>
                       <span className="font-mono text-slate-300">
                         {goal.deadline
-                          ? new Date(goal.deadline).toLocaleDateString(undefined, {
-                              month: 'short',
-                              day: 'numeric',
-                            })
-                          : 'None'}
+                          ? new Date(goal.deadline).toLocaleDateString(
+                              undefined,
+                              {
+                                month: "short",
+                                day: "numeric",
+                              },
+                            )
+                          : "None"}
                       </span>
                     </div>
 
@@ -675,15 +730,15 @@ export const DashboardPage: React.FC = () => {
                       <span className="text-slate-400">Risk:</span>
                       <span
                         className={`text-[11px] font-mono px-2 py-0.5 rounded border ${
-                          deadlineRisk.level === 'critical'
-                            ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
-                            : deadlineRisk.level === 'high'
-                            ? 'bg-orange-500/10 text-orange-400 border-orange-500/30'
-                            : deadlineRisk.level === 'medium'
-                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                            : deadlineRisk.level === 'none'
-                            ? 'bg-slate-800/50 text-slate-400 border-slate-700/40'
-                            : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                          deadlineRisk.level === "critical"
+                            ? "bg-rose-500/10 text-rose-400 border-rose-500/30"
+                            : deadlineRisk.level === "high"
+                              ? "bg-orange-500/10 text-orange-400 border-orange-500/30"
+                              : deadlineRisk.level === "medium"
+                                ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                                : deadlineRisk.level === "none"
+                                  ? "bg-slate-800/50 text-slate-400 border-slate-700/40"
+                                  : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
                         }`}
                       >
                         {deadlineRisk.label}
@@ -702,7 +757,7 @@ export const DashboardPage: React.FC = () => {
                     </Link>
 
                     <div className="flex items-center space-x-1.5">
-                      {goal.status === 'paused' ? (
+                      {goal.status === "paused" ? (
                         <button
                           onClick={() => resumeMutation.mutate(goal.id)}
                           disabled={resumeMutation.isPending}
@@ -756,7 +811,8 @@ export const DashboardPage: React.FC = () => {
               <span>Recent Autonomous Agent Activity</span>
             </h2>
             <p className="text-xs text-slate-400">
-              Live audit trail of agent learning loops, insights, and human permission decisions
+              Live audit trail of agent learning loops, insights, and human
+              permission decisions
             </p>
           </div>
 
@@ -809,11 +865,11 @@ export const DashboardPage: React.FC = () => {
                 className="p-4 hover:bg-slate-900/80 transition-colors flex items-start space-x-3.5"
               >
                 <div className="mt-0.5 shrink-0">
-                  {item.type === 'learning_memory' ? (
+                  {item.type === "learning_memory" ? (
                     <div className="w-8 h-8 rounded-lg bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400">
                       <Sparkles className="w-4 h-4" />
                     </div>
-                  ) : item.type === 'approval' ? (
+                  ) : item.type === "approval" ? (
                     <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
                       <ShieldCheck className="w-4 h-4" />
                     </div>
@@ -842,11 +898,11 @@ export const DashboardPage: React.FC = () => {
                     <div className="pt-0.5">
                       <span
                         className={`inline-block text-[10px] font-mono px-2 py-0.2 rounded border ${
-                          item.badgeVariant === 'success'
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                            : item.badgeVariant === 'warning'
-                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                            : 'bg-slate-800 text-slate-400 border-slate-700'
+                          item.badgeVariant === "success"
+                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                            : item.badgeVariant === "warning"
+                              ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                              : "bg-slate-800 text-slate-400 border-slate-700"
                         }`}
                       >
                         {item.badge}
@@ -872,7 +928,11 @@ export const DashboardPage: React.FC = () => {
       >
         <form onSubmit={handleCreateSubmit} className="space-y-4 pt-1">
           {formError && (
-            <Alert variant="error" title="Input Error" onDismiss={() => setFormError(null)}>
+            <Alert
+              variant="error"
+              title="Input Error"
+              onDismiss={() => setFormError(null)}
+            >
               {formError}
             </Alert>
           )}
@@ -960,7 +1020,9 @@ export const DashboardPage: React.FC = () => {
 };
 
 // Reusable micro-component for Activity Section Icon
-const ActivityCircleIcon: React.FC<{ className?: string }> = ({ className }) => (
+const ActivityCircleIcon: React.FC<{ className?: string }> = ({
+  className,
+}) => (
   <svg
     className={className}
     viewBox="0 0 24 24"

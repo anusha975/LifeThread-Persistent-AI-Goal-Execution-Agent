@@ -1,25 +1,25 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Lock, Mail, Sparkles } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Alert } from '../components/ui/Alert';
-import { APIError } from '../types/api';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowRight, Lock, Mail, Sparkles } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { Alert } from "../components/ui/Alert";
+import { APIError } from "../types/api";
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      setErrorMessage('Please enter both your email and password');
+      setErrorMessage("Please enter both your email and password");
       return;
     }
 
@@ -28,12 +28,12 @@ export const LoginPage: React.FC = () => {
 
     try {
       await login({ email, password });
-      navigate('/dashboard', { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       if (err instanceof APIError) {
-        setErrorMessage(err.message || 'Invalid email or password');
+        setErrorMessage(err.message || "Invalid email or password");
       } else {
-        setErrorMessage('Failed to sign in. Please verify your credentials.');
+        setErrorMessage("Failed to sign in. Please verify your credentials.");
       }
     } finally {
       setIsLoading(false);
@@ -54,8 +54,12 @@ export const LoginPage: React.FC = () => {
             </div>
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white">LifeThread</h1>
-            <p className="text-xs text-slate-400 font-mono">Autonomous AI Platform</p>
+            <h1 className="text-2xl font-bold tracking-tight text-white">
+              LifeThread
+            </h1>
+            <p className="text-xs text-slate-400 font-mono">
+              Autonomous AI Platform
+            </p>
           </div>
         </div>
 
@@ -119,7 +123,7 @@ export const LoginPage: React.FC = () => {
 
           <div className="border-t border-slate-800/80 pt-4 text-center">
             <p className="text-xs text-slate-400">
-              Don't have an account yet?{' '}
+              Don't have an account yet?{" "}
               <Link
                 to="/register"
                 className="text-emerald-400 hover:text-emerald-300 font-medium underline-offset-4 hover:underline"

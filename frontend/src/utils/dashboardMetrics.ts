@@ -1,4 +1,4 @@
-import { Goal, GoalMilestone, GoalPriority } from '../types/goal';
+import { Goal, GoalMilestone, GoalPriority } from "../types/goal";
 
 export interface GoalProgressInfo {
   progressPercent: number;
@@ -9,12 +9,12 @@ export interface GoalProgressInfo {
 
 export interface NextActionInfo {
   title: string;
-  status: 'in_progress' | 'pending' | 'none';
+  status: "in_progress" | "pending" | "none";
   milestone?: GoalMilestone;
   isDefined: boolean;
 }
 
-export type DeadlineRiskLevel = 'critical' | 'high' | 'medium' | 'low' | 'none';
+export type DeadlineRiskLevel = "critical" | "high" | "medium" | "low" | "none";
 
 export interface DeadlineRiskInfo {
   level: DeadlineRiskLevel;
@@ -50,7 +50,7 @@ export function calculateGoalProgress(goal: Goal): GoalProgressInfo {
   const total = milestones.length;
 
   if (total === 0) {
-    const isCompleted = goal.status === 'completed';
+    const isCompleted = goal.status === "completed";
     return {
       progressPercent: isCompleted ? 100 : 0,
       completedMilestones: isCompleted ? 1 : 0,
@@ -59,7 +59,7 @@ export function calculateGoalProgress(goal: Goal): GoalProgressInfo {
     };
   }
 
-  const completed = milestones.filter((m) => m.status === 'completed').length;
+  const completed = milestones.filter((m) => m.status === "completed").length;
   const progressPercent = Math.round((completed / total) * 100);
 
   return {
@@ -78,8 +78,8 @@ export function getGoalNextAction(goal: Goal): NextActionInfo {
 
   if (milestones.length === 0) {
     return {
-      title: 'No pending milestones configured',
-      status: 'none',
+      title: "No pending milestones configured",
+      status: "none",
       isDefined: false,
     };
   }
@@ -88,22 +88,22 @@ export function getGoalNextAction(goal: Goal): NextActionInfo {
   milestones.sort((a, b) => a.order_index - b.order_index);
 
   // First priority: currently in_progress milestone
-  const inProgress = milestones.find((m) => m.status === 'in_progress');
+  const inProgress = milestones.find((m) => m.status === "in_progress");
   if (inProgress) {
     return {
       title: inProgress.title,
-      status: 'in_progress',
+      status: "in_progress",
       milestone: inProgress,
       isDefined: true,
     };
   }
 
   // Second priority: first pending milestone
-  const pending = milestones.find((m) => m.status === 'pending');
+  const pending = milestones.find((m) => m.status === "pending");
   if (pending) {
     return {
       title: pending.title,
-      status: 'pending',
+      status: "pending",
       milestone: pending,
       isDefined: true,
     };
@@ -111,8 +111,8 @@ export function getGoalNextAction(goal: Goal): NextActionInfo {
 
   // If all milestones completed
   return {
-    title: 'All milestones completed',
-    status: 'none',
+    title: "All milestones completed",
+    status: "none",
     isDefined: true,
   };
 }
@@ -123,24 +123,24 @@ export function getGoalNextAction(goal: Goal): NextActionInfo {
 export function calculateDeadlineRisk(
   deadlinestr: string | null | undefined,
   progressPercent: number,
-  goalStatus: string
+  goalStatus: string,
 ): DeadlineRiskInfo {
   if (!deadlinestr) {
     return {
-      level: 'none',
-      label: 'Unconstrained',
-      text: 'No deadline set',
+      level: "none",
+      label: "Unconstrained",
+      text: "No deadline set",
       daysRemaining: null,
       hoursRemaining: null,
       isOverdue: false,
     };
   }
 
-  if (goalStatus === 'completed') {
+  if (goalStatus === "completed") {
     return {
-      level: 'low',
-      label: 'Completed',
-      text: 'Goal completed',
+      level: "low",
+      label: "Completed",
+      text: "Goal completed",
       daysRemaining: null,
       hoursRemaining: null,
       isOverdue: false,
@@ -156,9 +156,9 @@ export function calculateDeadlineRisk(
   if (diffMs <= 0) {
     const overdueDays = Math.abs(daysRemaining) || 1;
     return {
-      level: 'critical',
-      label: 'Overdue',
-      text: `Overdue by ${overdueDays} day${overdueDays > 1 ? 's' : ''}`,
+      level: "critical",
+      label: "Overdue",
+      text: `Overdue by ${overdueDays} day${overdueDays > 1 ? "s" : ""}`,
       daysRemaining,
       hoursRemaining,
       isOverdue: true,
@@ -167,9 +167,9 @@ export function calculateDeadlineRisk(
 
   if (hoursRemaining <= 48 && progressPercent < 100) {
     return {
-      level: 'high',
-      label: 'High Risk',
-      text: `Due in ${hoursRemaining} hour${hoursRemaining > 1 ? 's' : ''}`,
+      level: "high",
+      label: "High Risk",
+      text: `Due in ${hoursRemaining} hour${hoursRemaining > 1 ? "s" : ""}`,
       daysRemaining,
       hoursRemaining,
       isOverdue: false,
@@ -178,9 +178,9 @@ export function calculateDeadlineRisk(
 
   if (daysRemaining <= 7 && progressPercent < 50) {
     return {
-      level: 'medium',
-      label: 'Moderate Risk',
-      text: `Due in ${daysRemaining} day${daysRemaining > 1 ? 's' : ''} (${progressPercent}% complete)`,
+      level: "medium",
+      label: "Moderate Risk",
+      text: `Due in ${daysRemaining} day${daysRemaining > 1 ? "s" : ""} (${progressPercent}% complete)`,
       daysRemaining,
       hoursRemaining,
       isOverdue: false,
@@ -188,9 +188,9 @@ export function calculateDeadlineRisk(
   }
 
   return {
-    level: 'low',
-    label: 'On Track',
-    text: daysRemaining > 1 ? `Due in ${daysRemaining} days` : 'Due today',
+    level: "low",
+    label: "On Track",
+    text: daysRemaining > 1 ? `Due in ${daysRemaining} days` : "Due today",
     daysRemaining,
     hoursRemaining,
     isOverdue: false,
@@ -207,9 +207,11 @@ const priorityRank: Record<GoalPriority, number> = {
 /**
  * Computes overall dashboard summary across all goals strictly from backend records.
  */
-export function calculateOverallSummary(goals: Goal[]): DashboardOverallSummary {
-  const activeGoals = goals.filter((g) => g.status === 'active');
-  const completedGoals = goals.filter((g) => g.status === 'completed');
+export function calculateOverallSummary(
+  goals: Goal[],
+): DashboardOverallSummary {
+  const activeGoals = goals.filter((g) => g.status === "active");
+  const completedGoals = goals.filter((g) => g.status === "completed");
 
   let totalMilestonesCount = 0;
   let completedMilestonesCount = 0;
@@ -223,15 +225,22 @@ export function calculateOverallSummary(goals: Goal[]): DashboardOverallSummary 
   // Calculate real overall percentage
   let overallProgressPercent = 0;
   if (totalMilestonesCount > 0) {
-    overallProgressPercent = Math.round((completedMilestonesCount / totalMilestonesCount) * 100);
+    overallProgressPercent = Math.round(
+      (completedMilestonesCount / totalMilestonesCount) * 100,
+    );
   } else if (goals.length > 0) {
-    overallProgressPercent = Math.round((completedGoals.length / goals.length) * 100);
+    overallProgressPercent = Math.round(
+      (completedGoals.length / goals.length) * 100,
+    );
   }
 
   // Find highest active priority
   let highestPriority: GoalPriority | null = null;
   activeGoals.forEach((g) => {
-    if (!highestPriority || priorityRank[g.priority] > priorityRank[highestPriority]) {
+    if (
+      !highestPriority ||
+      priorityRank[g.priority] > priorityRank[highestPriority]
+    ) {
       highestPriority = g.priority;
     }
   });
@@ -241,12 +250,18 @@ export function calculateOverallSummary(goals: Goal[]): DashboardOverallSummary 
   activeGoals.forEach((g) => {
     if (g.deadline) {
       const progress = calculateGoalProgress(g);
-      const risk = calculateDeadlineRisk(g.deadline, progress.progressPercent, g.status);
+      const risk = calculateDeadlineRisk(
+        g.deadline,
+        progress.progressPercent,
+        g.status,
+      );
       if (!nearestDeadlineGoal) {
         nearestDeadlineGoal = { goal: g, risk };
       } else {
         const currentTarget = new Date(g.deadline).getTime();
-        const existingTarget = new Date(nearestDeadlineGoal.goal.deadline!).getTime();
+        const existingTarget = new Date(
+          nearestDeadlineGoal.goal.deadline!,
+        ).getTime();
         if (currentTarget < existingTarget) {
           nearestDeadlineGoal = { goal: g, risk };
         }
@@ -257,12 +272,12 @@ export function calculateOverallSummary(goals: Goal[]): DashboardOverallSummary 
   // Find most urgent next action (from highest priority goal with a pending/in_progress action)
   let urgentNextAction: { goal: Goal; action: NextActionInfo } | null = null;
   const sortedActive = [...activeGoals].sort(
-    (a, b) => priorityRank[b.priority] - priorityRank[a.priority]
+    (a, b) => priorityRank[b.priority] - priorityRank[a.priority],
   );
 
   for (const g of sortedActive) {
     const action = getGoalNextAction(g);
-    if (action.isDefined && action.status !== 'none') {
+    if (action.isDefined && action.status !== "none") {
       urgentNextAction = { goal: g, action };
       break;
     }
@@ -290,14 +305,14 @@ export function formatRelativeTime(dateString: string): string {
 
     const diffSeconds = Math.round((Date.now() - timestamp) / 1000);
 
-    if (diffSeconds < 60) return 'Just now';
+    if (diffSeconds < 60) return "Just now";
     if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}m ago`;
     if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)}h ago`;
     if (diffSeconds < 604800) return `${Math.floor(diffSeconds / 86400)}d ago`;
 
     return new Date(dateString).toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
+      month: "short",
+      day: "numeric",
     });
   } catch {
     return dateString;

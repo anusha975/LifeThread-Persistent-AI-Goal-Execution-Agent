@@ -1,22 +1,44 @@
-import React, { Suspense } from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider } from './context/AuthContext';
-import { ErrorBoundary } from './components/layout/ErrorBoundary';
-import { AppShell } from './components/layout/AppShell';
-import { ProtectedRoute } from './components/layout/ProtectedRoute';
-import { PublicRoute } from './components/layout/PublicRoute';
+import React, { Suspense } from "react";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AuthProvider } from "./context/AuthContext";
+import { ErrorBoundary } from "./components/layout/ErrorBoundary";
+import { AppShell } from "./components/layout/AppShell";
+import { ProtectedRoute } from "./components/layout/ProtectedRoute";
+import { PublicRoute } from "./components/layout/PublicRoute";
 
 // Code-split page components for minimal initial bundle size and rapid loading
-const LoginPage = React.lazy(() => import('./pages/LoginPage').then(m => ({ default: m.LoginPage })));
-const RegisterPage = React.lazy(() => import('./pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
-const DashboardPage = React.lazy(() => import('./pages/DashboardPage').then(m => ({ default: m.DashboardPage })));
-const GoalsPage = React.lazy(() => import('./pages/GoalsPage').then(m => ({ default: m.GoalsPage })));
-const GoalDetailPage = React.lazy(() => import('./pages/GoalDetailPage').then(m => ({ default: m.GoalDetailPage })));
-const AgentActivityPage = React.lazy(() => import('./pages/AgentActivityPage').then(m => ({ default: m.AgentActivityPage })));
-const MemoryContextPage = React.lazy(() => import('./pages/MemoryContextPage').then(m => ({ default: m.MemoryContextPage })));
-const AssistantPage = React.lazy(() => import('./pages/AssistantPage').then(m => ({ default: m.AssistantPage })));
-const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
+const LoginPage = React.lazy(() =>
+  import("./pages/LoginPage").then((m) => ({ default: m.LoginPage })),
+);
+const RegisterPage = React.lazy(() =>
+  import("./pages/RegisterPage").then((m) => ({ default: m.RegisterPage })),
+);
+const DashboardPage = React.lazy(() =>
+  import("./pages/DashboardPage").then((m) => ({ default: m.DashboardPage })),
+);
+const GoalsPage = React.lazy(() =>
+  import("./pages/GoalsPage").then((m) => ({ default: m.GoalsPage })),
+);
+const GoalDetailPage = React.lazy(() =>
+  import("./pages/GoalDetailPage").then((m) => ({ default: m.GoalDetailPage })),
+);
+const AgentActivityPage = React.lazy(() =>
+  import("./pages/AgentActivityPage").then((m) => ({
+    default: m.AgentActivityPage,
+  })),
+);
+const MemoryContextPage = React.lazy(() =>
+  import("./pages/MemoryContextPage").then((m) => ({
+    default: m.MemoryContextPage,
+  })),
+);
+const AssistantPage = React.lazy(() =>
+  import("./pages/AssistantPage").then((m) => ({ default: m.AssistantPage })),
+);
+const NotFoundPage = React.lazy(() =>
+  import("./pages/NotFoundPage").then((m) => ({ default: m.NotFoundPage })),
+);
 
 function PageLoadingFallback() {
   return (
@@ -37,8 +59,8 @@ const queryClient = new QueryClient({
         // Do not retry 401, 403, 404
         if (
           error &&
-          typeof error === 'object' &&
-          'status' in error &&
+          typeof error === "object" &&
+          "status" in error &&
           (error.status === 401 || error.status === 403 || error.status === 404)
         ) {
           return false;
@@ -92,7 +114,10 @@ export function App(): React.ReactElement {
                   <Route path="activity" element={<AgentActivityPage />} />
                   <Route path="memories" element={<MemoryContextPage />} />
                   <Route path="assistant" element={<AssistantPage />} />
-                  <Route path="chat" element={<Navigate to="/assistant" replace />} />
+                  <Route
+                    path="chat"
+                    element={<Navigate to="/assistant" replace />}
+                  />
                 </Route>
 
                 {/* Fallback 404 Route */}

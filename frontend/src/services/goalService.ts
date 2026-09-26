@@ -5,17 +5,17 @@ import {
   GoalPriority,
   GoalStatus,
   GoalUpdatePayload,
-} from '../types/goal';
+} from "../types/goal";
 import {
   Task,
   TaskDependencyGraphResponse,
   TaskListResponse,
   TaskUpdatePayload,
-} from '../types/task';
-import { Plan, PlanListResponse } from '../types/plan';
-import { GoalEvaluation } from '../types/evaluation';
-import { ReplanningDiffResponse } from '../types/replanning';
-import { apiClient } from './apiClient';
+} from "../types/task";
+import { Plan, PlanListResponse } from "../types/plan";
+import { GoalEvaluation } from "../types/evaluation";
+import { ReplanningDiffResponse } from "../types/replanning";
+import { apiClient } from "./apiClient";
 
 export interface ListGoalsParams {
   status?: GoalStatus;
@@ -27,12 +27,13 @@ export const goalService = {
   // Goal CRUD & Lifecycle
   async listGoals(params?: ListGoalsParams): Promise<GoalListResponse> {
     const query = new URLSearchParams();
-    if (params?.status) query.append('status', params.status);
-    if (params?.limit) query.append('limit', params.limit.toString());
-    if (params?.offset !== undefined) query.append('offset', params.offset.toString());
+    if (params?.status) query.append("status", params.status);
+    if (params?.limit) query.append("limit", params.limit.toString());
+    if (params?.offset !== undefined)
+      query.append("offset", params.offset.toString());
 
     const queryString = query.toString();
-    const endpoint = queryString ? `/goals?${queryString}` : '/goals';
+    const endpoint = queryString ? `/goals?${queryString}` : "/goals";
     return apiClient.get<GoalListResponse>(endpoint);
   },
 
@@ -52,11 +53,11 @@ export const goalService = {
     deadline?: string | null;
     success_criteria?: string[];
   }> {
-    return apiClient.post('/goals/understand', payload);
+    return apiClient.post("/goals/understand", payload);
   },
 
   async createGoal(payload: GoalCreatePayload): Promise<Goal> {
-    return apiClient.post<Goal>('/goals', payload);
+    return apiClient.post<Goal>("/goals", payload);
   },
 
   async updateGoal(id: string, payload: GoalUpdatePayload): Promise<Goal> {
@@ -80,15 +81,24 @@ export const goalService = {
   },
 
   // Tasks Management
-  async getTasks(goalId: string, params?: { version?: number; status?: string }): Promise<TaskListResponse> {
+  async getTasks(
+    goalId: string,
+    params?: { version?: number; status?: string },
+  ): Promise<TaskListResponse> {
     const query = new URLSearchParams();
-    if (params?.version) query.append('version', params.version.toString());
-    if (params?.status) query.append('status', params.status);
+    if (params?.version) query.append("version", params.version.toString());
+    if (params?.status) query.append("status", params.status);
     const qs = query.toString();
-    return apiClient.get<TaskListResponse>(qs ? `/goals/${goalId}/tasks?${qs}` : `/goals/${goalId}/tasks`);
+    return apiClient.get<TaskListResponse>(
+      qs ? `/goals/${goalId}/tasks?${qs}` : `/goals/${goalId}/tasks`,
+    );
   },
 
-  async updateTask(goalId: string, taskId: string, payload: TaskUpdatePayload): Promise<Task> {
+  async updateTask(
+    goalId: string,
+    taskId: string,
+    payload: TaskUpdatePayload,
+  ): Promise<Task> {
     return apiClient.patch<Task>(`/goals/${goalId}/tasks/${taskId}`, payload);
   },
 
@@ -97,9 +107,14 @@ export const goalService = {
   },
 
   // Dependencies Graph
-  async getDependencies(goalId: string, version?: number): Promise<TaskDependencyGraphResponse> {
-    const qs = version ? `?version=${version}` : '';
-    return apiClient.get<TaskDependencyGraphResponse>(`/goals/${goalId}/dependencies${qs}`);
+  async getDependencies(
+    goalId: string,
+    version?: number,
+  ): Promise<TaskDependencyGraphResponse> {
+    const qs = version ? `?version=${version}` : "";
+    return apiClient.get<TaskDependencyGraphResponse>(
+      `/goals/${goalId}/dependencies${qs}`,
+    );
   },
 
   // Plans & Timeline
@@ -133,20 +148,26 @@ export const goalService = {
   async getReplanningDiff(
     goalId: string,
     versionA?: number,
-    versionB?: number
+    versionB?: number,
   ): Promise<ReplanningDiffResponse> {
     const query = new URLSearchParams();
-    if (versionA !== undefined) query.append('version_a', versionA.toString());
-    if (versionB !== undefined) query.append('version_b', versionB.toString());
+    if (versionA !== undefined) query.append("version_a", versionA.toString());
+    if (versionB !== undefined) query.append("version_b", versionB.toString());
     const qs = query.toString();
     return apiClient.get<ReplanningDiffResponse>(
-      qs ? `/goals/${goalId}/replanning-diff?${qs}` : `/goals/${goalId}/replanning-diff`
+      qs
+        ? `/goals/${goalId}/replanning-diff?${qs}`
+        : `/goals/${goalId}/replanning-diff`,
     );
   },
 
   async triggerReplan(
     goalId: string,
-    payload: { reason: string; description: string; details?: Record<string, unknown> }
+    payload: {
+      reason: string;
+      description: string;
+      details?: Record<string, unknown>;
+    },
   ): Promise<unknown> {
     return apiClient.post(`/goals/${goalId}/replan`, payload);
   },

@@ -1,6 +1,8 @@
-export type GoalStatus = 'active' | 'paused' | 'completed' | 'archived' | 'failed';
-export type GoalPriority = 'low' | 'medium' | 'high' | 'critical';
-export type MilestoneStatus = 'pending' | 'in_progress' | 'completed' | 'failed';
+export type GoalStatus =
+  "active" | "paused" | "completed" | "archived" | "failed";
+export type GoalPriority = "low" | "medium" | "high" | "critical";
+export type MilestoneStatus =
+  "pending" | "in_progress" | "completed" | "failed";
 
 export interface GoalConstraint {
   id: string;

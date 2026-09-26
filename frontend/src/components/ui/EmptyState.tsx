@@ -1,7 +1,7 @@
-import React from 'react';
-import { LucideIcon } from 'lucide-react';
-import { Button } from './Button';
-import { cn } from '../../utils/cn';
+import React from "react";
+import { LucideIcon } from "lucide-react";
+import { Button } from "./Button";
+import { cn } from "../../utils/cn";
 
 export interface EmptyStateProps {
   icon: LucideIcon;
@@ -22,7 +22,7 @@ export interface EmptyStateProps {
     onClick: () => void;
   };
   className?: string;
-  variant?: 'default' | 'card' | 'compact';
+  variant?: "default" | "card" | "compact";
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
@@ -37,34 +37,42 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   onSecondaryAction,
   secondaryAction,
   className,
-  variant = 'default',
+  variant = "default",
 }) => {
   const resolvedActionLabel = action?.label || actionLabel;
   const resolvedOnAction = action?.onClick || onAction;
   const ActionIcon = action?.icon;
-  const resolvedActionIcon = ActionIcon ? <ActionIcon className="w-4 h-4" /> : actionIcon;
+  const resolvedActionIcon = ActionIcon ? (
+    <ActionIcon className="w-4 h-4" />
+  ) : (
+    actionIcon
+  );
 
   const resolvedSecLabel = secondaryAction?.label || secondaryActionLabel;
   const resolvedOnSec = secondaryAction?.onClick || onSecondaryAction;
-  const isCard = variant === 'card';
-  const isCompact = variant === 'compact';
+  const isCard = variant === "card";
+  const isCompact = variant === "compact";
 
   return (
     <div
       role="status"
       aria-label={title}
       className={cn(
-        'flex flex-col items-center justify-center text-center transition-all',
-        isCompact ? 'py-8 px-4' : 'py-12 px-6',
-        isCard && 'rounded-2xl border border-slate-800/80 bg-slate-900/40 backdrop-blur-sm',
-        className
+        "flex flex-col items-center justify-center text-center transition-all",
+        isCompact ? "py-8 px-4" : "py-12 px-6",
+        isCard &&
+          "rounded-2xl border border-slate-800/80 bg-slate-900/40 backdrop-blur-sm",
+        className,
       )}
     >
       <div className="relative mb-4">
         {/* Subtle radial ambient glow */}
         <div className="absolute inset-0 bg-emerald-500/10 blur-xl rounded-full transform scale-150" />
         <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700/60 shadow-lg flex items-center justify-center text-emerald-400">
-          <Icon className="w-6 h-6 sm:w-7 sm:h-7 stroke-[1.75]" aria-hidden="true" />
+          <Icon
+            className="w-6 h-6 sm:w-7 sm:h-7 stroke-[1.75]"
+            aria-hidden="true"
+          />
         </div>
       </div>
 
@@ -81,7 +89,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
             <Button
               onClick={resolvedOnAction}
               variant="primary"
-              size={isCompact ? 'sm' : 'md'}
+              size={isCompact ? "sm" : "md"}
               leftIcon={resolvedActionIcon}
             >
               {resolvedActionLabel}
@@ -91,7 +99,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
             <Button
               onClick={resolvedOnSec}
               variant="outline"
-              size={isCompact ? 'sm' : 'md'}
+              size={isCompact ? "sm" : "md"}
             >
               {resolvedSecLabel}
             </Button>

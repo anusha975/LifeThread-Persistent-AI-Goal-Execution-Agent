@@ -1,9 +1,9 @@
 export type MemoryCategory =
-  | 'Goal memory'
-  | 'Preference'
-  | 'Past outcome'
-  | 'Learned weakness'
-  | 'Relevant knowledge';
+  | "Goal memory"
+  | "Preference"
+  | "Past outcome"
+  | "Learned weakness"
+  | "Relevant knowledge";
 
 export interface RelatedGoalInfo {
   id: string;

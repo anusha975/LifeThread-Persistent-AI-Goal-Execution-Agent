@@ -1,18 +1,13 @@
 export type ExecutionEventType =
-  | 'AGENT_RUN'
-  | 'DECISION'
-  | 'TOOL_CALL'
-  | 'TOOL_RESULT'
-  | 'EVALUATION'
-  | 'STATE_UPDATE';
+  | "AGENT_RUN"
+  | "DECISION"
+  | "TOOL_CALL"
+  | "TOOL_RESULT"
+  | "EVALUATION"
+  | "STATE_UPDATE";
 
 export type EventStatus =
-  | 'SUCCESS'
-  | 'PENDING'
-  | 'RUNNING'
-  | 'FAILED'
-  | 'WARNING'
-  | 'SKIPPED';
+  "SUCCESS" | "PENDING" | "RUNNING" | "FAILED" | "WARNING" | "SKIPPED";
 
 export interface AgentExecutionEvent {
   id: string;

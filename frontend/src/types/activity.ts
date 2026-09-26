@@ -41,7 +41,8 @@ export interface PendingPermissionRequest {
   risk_level: string;
 }
 
-export type ActivityItemType = 'learning_memory' | 'approval' | 'pending_request' | 'goal_event';
+export type ActivityItemType =
+  "learning_memory" | "approval" | "pending_request" | "goal_event";
 
 export interface DashboardActivityItem {
   id: string;
@@ -50,6 +51,6 @@ export interface DashboardActivityItem {
   description: string;
   timestamp: string;
   badge?: string;
-  badgeVariant?: 'default' | 'success' | 'warning' | 'danger' | 'info';
+  badgeVariant?: "default" | "success" | "warning" | "danger" | "info";
   metadata?: Record<string, unknown>;
 }

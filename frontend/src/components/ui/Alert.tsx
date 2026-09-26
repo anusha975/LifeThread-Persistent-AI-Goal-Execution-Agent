@@ -1,16 +1,22 @@
-import React from 'react';
-import { AlertCircle, AlertTriangle, CheckCircle2, Info, X } from 'lucide-react';
-import { cn } from '../../utils/cn';
+import React from "react";
+import {
+  AlertCircle,
+  AlertTriangle,
+  CheckCircle2,
+  Info,
+  X,
+} from "lucide-react";
+import { cn } from "../../utils/cn";
 
 export interface AlertProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'info' | 'success' | 'warning' | 'error';
+  variant?: "info" | "success" | "warning" | "error";
   title?: string;
   onDismiss?: () => void;
 }
 
 export const Alert: React.FC<AlertProps> = ({
   className,
-  variant = 'info',
+  variant = "info",
   title,
   onDismiss,
   children,
@@ -18,19 +24,23 @@ export const Alert: React.FC<AlertProps> = ({
 }) => {
   const variants = {
     info: {
-      container: 'bg-blue-950/40 border-blue-800/60 text-blue-200',
+      container: "bg-blue-950/40 border-blue-800/60 text-blue-200",
       icon: <Info className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />,
     },
     success: {
-      container: 'bg-emerald-950/40 border-emerald-800/60 text-emerald-200',
-      icon: <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />,
+      container: "bg-emerald-950/40 border-emerald-800/60 text-emerald-200",
+      icon: (
+        <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+      ),
     },
     warning: {
-      container: 'bg-amber-950/40 border-amber-800/60 text-amber-200',
-      icon: <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />,
+      container: "bg-amber-950/40 border-amber-800/60 text-amber-200",
+      icon: (
+        <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+      ),
     },
     error: {
-      container: 'bg-rose-950/40 border-rose-800/60 text-rose-200',
+      container: "bg-rose-950/40 border-rose-800/60 text-rose-200",
       icon: <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />,
     },
   };
@@ -40,7 +50,11 @@ export const Alert: React.FC<AlertProps> = ({
   return (
     <div
       role="alert"
-      className={cn('rounded-lg border p-4 flex items-start space-x-3 text-sm shadow-sm', current.container, className)}
+      className={cn(
+        "rounded-lg border p-4 flex items-start space-x-3 text-sm shadow-sm",
+        current.container,
+        className,
+      )}
       {...props}
     >
       {current.icon}

@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, useSearchParams } from 'react-router-dom';
+import React, { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   AlertTriangle,
   BookOpen,
@@ -19,30 +19,54 @@ import {
   Target,
   Trash2,
   X,
-} from 'lucide-react';
-import { memoryService } from '../services/memoryService';
-import { goalService } from '../services/goalService';
+} from "lucide-react";
+import { memoryService } from "../services/memoryService";
+import { goalService } from "../services/goalService";
 import {
   MemoryCategory,
   MemoryCorrectionPayload,
   MemoryCreatePayload,
   UserMemoryItem,
-} from '../types/memory';
-import { formatRelativeTime } from '../utils/dashboardMetrics';
-import { Button } from '../components/ui/Button';
-import { Modal } from '../components/ui/Modal';
-import { Skeleton } from '../components/ui/Skeleton';
-import { Alert } from '../components/ui/Alert';
-import { EmptyState } from '../components/ui/EmptyState';
-import { ConfirmDialog } from '../components/ui/ConfirmDialog';
+} from "../types/memory";
+import { formatRelativeTime } from "../utils/dashboardMetrics";
+import { Button } from "../components/ui/Button";
+import { Modal } from "../components/ui/Modal";
+import { Skeleton } from "../components/ui/Skeleton";
+import { Alert } from "../components/ui/Alert";
+import { EmptyState } from "../components/ui/EmptyState";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 
-const CATEGORIES: { key: MemoryCategory | 'all'; label: string; icon: React.ReactNode }[] = [
-  { key: 'all', label: 'All Memories', icon: <Brain className="w-4 h-4" /> },
-  { key: 'Goal memory', label: 'Goal memory', icon: <Target className="w-4 h-4" /> },
-  { key: 'Preference', label: 'Preference', icon: <Sliders className="w-4 h-4" /> },
-  { key: 'Past outcome', label: 'Past outcome', icon: <CheckCircle2 className="w-4 h-4" /> },
-  { key: 'Learned weakness', label: 'Learned weakness', icon: <AlertTriangle className="w-4 h-4" /> },
-  { key: 'Relevant knowledge', label: 'Relevant knowledge', icon: <BookOpen className="w-4 h-4" /> },
+const CATEGORIES: {
+  key: MemoryCategory | "all";
+  label: string;
+  icon: React.ReactNode;
+}[] = [
+  { key: "all", label: "All Memories", icon: <Brain className="w-4 h-4" /> },
+  {
+    key: "Goal memory",
+    label: "Goal memory",
+    icon: <Target className="w-4 h-4" />,
+  },
+  {
+    key: "Preference",
+    label: "Preference",
+    icon: <Sliders className="w-4 h-4" />,
+  },
+  {
+    key: "Past outcome",
+    label: "Past outcome",
+    icon: <CheckCircle2 className="w-4 h-4" />,
+  },
+  {
+    key: "Learned weakness",
+    label: "Learned weakness",
+    icon: <AlertTriangle className="w-4 h-4" />,
+  },
+  {
+    key: "Relevant knowledge",
+    label: "Relevant knowledge",
+    icon: <BookOpen className="w-4 h-4" />,
+  },
 ];
 
 export const MemoryContextPage: React.FC = () => {
@@ -50,9 +74,10 @@ export const MemoryContextPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Active filter state
-  const activeCategory = (searchParams.get('category') as MemoryCategory) || undefined;
-  const activeGoalId = searchParams.get('goal_id') || undefined;
-  const [searchQuery, setSearchQuery] = useState('');
+  const activeCategory =
+    (searchParams.get("category") as MemoryCategory) || undefined;
+  const activeGoalId = searchParams.get("goal_id") || undefined;
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Modals state
   const [inspectItem, setInspectItem] = useState<UserMemoryItem | null>(null);
@@ -61,16 +86,17 @@ export const MemoryContextPage: React.FC = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   // Form states for Correction
-  const [correctedText, setCorrectedText] = useState('');
+  const [correctedText, setCorrectedText] = useState("");
   const [correctedConfidence, setCorrectedConfidence] = useState(1.0);
-  const [correctedCategory, setCorrectedCategory] = useState<MemoryCategory>('Goal memory');
+  const [correctedCategory, setCorrectedCategory] =
+    useState<MemoryCategory>("Goal memory");
   const [editError, setEditError] = useState<string | null>(null);
 
   // Form states for New Memory
-  const [newContent, setNewContent] = useState('');
-  const [newCategory, setNewCategory] = useState<MemoryCategory>('Preference');
+  const [newContent, setNewContent] = useState("");
+  const [newCategory, setNewCategory] = useState<MemoryCategory>("Preference");
   const [newConfidence, setNewConfidence] = useState(1.0);
-  const [newGoalId, setNewGoalId] = useState<string>('');
+  const [newGoalId, setNewGoalId] = useState<string>("");
   const [createError, setCreateError] = useState<string | null>(null);
 
   // 1. Fetch Memories from real backend API
@@ -81,7 +107,7 @@ export const MemoryContextPage: React.FC = () => {
     refetch: refetchMemories,
     isFetching: isFetchingMemories,
   } = useQuery({
-    queryKey: ['memories', activeCategory, activeGoalId, searchQuery],
+    queryKey: ["memories", activeCategory, activeGoalId, searchQuery],
     queryFn: () =>
       memoryService.listMemories({
         category: activeCategory,
@@ -93,42 +119,48 @@ export const MemoryContextPage: React.FC = () => {
 
   // 2. Fetch User Goals for linkage filter and assignment
   const { data: goalsData } = useQuery({
-    queryKey: ['goalsSimpleList'],
+    queryKey: ["goalsSimpleList"],
     queryFn: () => goalService.listGoals({ limit: 100 }),
   });
 
   // Mutations
   const correctMutation = useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: MemoryCorrectionPayload }) =>
-      memoryService.correctMemory(id, payload),
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: string;
+      payload: MemoryCorrectionPayload;
+    }) => memoryService.correctMemory(id, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['memories'] });
+      queryClient.invalidateQueries({ queryKey: ["memories"] });
       setEditingItem(null);
       setEditError(null);
     },
     onError: (err: any) => {
-      setEditError(err?.message || 'Failed to update memory');
+      setEditError(err?.message || "Failed to update memory");
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => memoryService.deleteMemory(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['memories'] });
+      queryClient.invalidateQueries({ queryKey: ["memories"] });
       setDeletingItem(null);
     },
   });
 
   const createMutation = useMutation({
-    mutationFn: (payload: MemoryCreatePayload) => memoryService.createMemory(payload),
+    mutationFn: (payload: MemoryCreatePayload) =>
+      memoryService.createMemory(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['memories'] });
+      queryClient.invalidateQueries({ queryKey: ["memories"] });
       setIsCreateOpen(false);
-      setNewContent('');
+      setNewContent("");
       setCreateError(null);
     },
     onError: (err: any) => {
-      setCreateError(err?.message || 'Failed to create memory');
+      setCreateError(err?.message || "Failed to create memory");
     },
   });
 
@@ -145,7 +177,7 @@ export const MemoryContextPage: React.FC = () => {
     e.preventDefault();
     if (!editingItem) return;
     if (!correctedText.trim()) {
-      setEditError('Memory statement cannot be empty');
+      setEditError("Memory statement cannot be empty");
       return;
     }
     correctMutation.mutate({
@@ -161,7 +193,7 @@ export const MemoryContextPage: React.FC = () => {
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newContent.trim()) {
-      setCreateError('Memory text is required');
+      setCreateError("Memory text is required");
       return;
     }
     createMutation.mutate({
@@ -172,12 +204,12 @@ export const MemoryContextPage: React.FC = () => {
     });
   };
 
-  const handleCategorySelect = (catKey: MemoryCategory | 'all') => {
+  const handleCategorySelect = (catKey: MemoryCategory | "all") => {
     const params = new URLSearchParams(searchParams);
-    if (catKey === 'all') {
-      params.delete('category');
+    if (catKey === "all") {
+      params.delete("category");
     } else {
-      params.set('category', catKey);
+      params.set("category", catKey);
     }
     setSearchParams(params);
   };
@@ -185,9 +217,9 @@ export const MemoryContextPage: React.FC = () => {
   const handleGoalSelect = (goalId: string) => {
     const params = new URLSearchParams(searchParams);
     if (!goalId) {
-      params.delete('goal_id');
+      params.delete("goal_id");
     } else {
-      params.set('goal_id', goalId);
+      params.set("goal_id", goalId);
     }
     setSearchParams(params);
   };
@@ -200,39 +232,39 @@ export const MemoryContextPage: React.FC = () => {
   // Helper badges for category styling
   const getCategoryTheme = (cat: MemoryCategory) => {
     switch (cat) {
-      case 'Goal memory':
+      case "Goal memory":
         return {
-          border: 'border-emerald-500/30',
-          bg: 'bg-emerald-500/10 text-emerald-400',
-          badge: 'success' as const,
+          border: "border-emerald-500/30",
+          bg: "bg-emerald-500/10 text-emerald-400",
+          badge: "success" as const,
           icon: <Target className="w-3.5 h-3.5" />,
         };
-      case 'Preference':
+      case "Preference":
         return {
-          border: 'border-purple-500/30',
-          bg: 'bg-purple-500/10 text-purple-400',
-          badge: 'secondary' as const,
+          border: "border-purple-500/30",
+          bg: "bg-purple-500/10 text-purple-400",
+          badge: "secondary" as const,
           icon: <Sliders className="w-3.5 h-3.5" />,
         };
-      case 'Past outcome':
+      case "Past outcome":
         return {
-          border: 'border-sky-500/30',
-          bg: 'bg-sky-500/10 text-sky-400',
-          badge: 'info' as const,
+          border: "border-sky-500/30",
+          bg: "bg-sky-500/10 text-sky-400",
+          badge: "info" as const,
           icon: <CheckCircle2 className="w-3.5 h-3.5" />,
         };
-      case 'Learned weakness':
+      case "Learned weakness":
         return {
-          border: 'border-amber-500/30',
-          bg: 'bg-amber-500/10 text-amber-400',
-          badge: 'warning' as const,
+          border: "border-amber-500/30",
+          bg: "bg-amber-500/10 text-amber-400",
+          badge: "warning" as const,
           icon: <AlertTriangle className="w-3.5 h-3.5" />,
         };
-      case 'Relevant knowledge':
+      case "Relevant knowledge":
         return {
-          border: 'border-indigo-500/30',
-          bg: 'bg-indigo-500/10 text-indigo-400',
-          badge: 'outline' as const,
+          border: "border-indigo-500/30",
+          bg: "bg-indigo-500/10 text-indigo-400",
+          badge: "outline" as const,
           icon: <BookOpen className="w-3.5 h-3.5" />,
         };
     }
@@ -266,8 +298,10 @@ export const MemoryContextPage: React.FC = () => {
                 <span>LifeThread Memory Workspace</span>
               </h1>
               <p className="text-xs sm:text-sm text-slate-400 max-w-2xl">
-                Transparent view of what LifeThread has remembered about your goals, habits, past outcomes,
-                and learned weaknesses. You maintain full sovereignty to audit, correct, or delete any memory.
+                Transparent view of what LifeThread has remembered about your
+                goals, habits, past outcomes, and learned weaknesses. You
+                maintain full sovereignty to audit, correct, or delete any
+                memory.
               </p>
             </div>
 
@@ -278,11 +312,13 @@ export const MemoryContextPage: React.FC = () => {
                 title="Refresh memories"
                 aria-label="Refresh memories"
               >
-                <RefreshCw className={`w-4 h-4 ${isFetchingMemories ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`w-4 h-4 ${isFetchingMemories ? "animate-spin" : ""}`}
+                />
               </button>
               <Button
                 onClick={() => {
-                  setNewContent('');
+                  setNewContent("");
                   setCreateError(null);
                   setIsCreateOpen(true);
                 }}
@@ -296,7 +332,7 @@ export const MemoryContextPage: React.FC = () => {
 
           {/* 5 Category Metric Counters */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            {CATEGORIES.filter((c) => c.key !== 'all').map((cat) => {
+            {CATEGORIES.filter((c) => c.key !== "all").map((cat) => {
               const count = categoryCounts[cat.key] || 0;
               const isSelected = activeCategory === cat.key;
               const theme = getCategoryTheme(cat.key as MemoryCategory);
@@ -307,15 +343,17 @@ export const MemoryContextPage: React.FC = () => {
                   onClick={() => handleCategorySelect(cat.key)}
                   className={`p-3.5 rounded-xl border text-left transition-all ${
                     isSelected
-                      ? 'bg-slate-800/80 border-emerald-500/60 shadow-lg shadow-emerald-500/10 ring-1 ring-emerald-500/30'
-                      : 'bg-slate-950/60 border-slate-800 hover:border-slate-700 hover:bg-slate-900/60'
+                      ? "bg-slate-800/80 border-emerald-500/60 shadow-lg shadow-emerald-500/10 ring-1 ring-emerald-500/30"
+                      : "bg-slate-950/60 border-slate-800 hover:border-slate-700 hover:bg-slate-900/60"
                   }`}
                 >
                   <div className="flex items-center justify-between text-xs text-slate-400">
                     <span className="truncate">{cat.label}</span>
                     <span className={theme.bg}>{cat.icon}</span>
                   </div>
-                  <div className="text-xl font-bold font-mono text-white mt-1.5">{count}</div>
+                  <div className="text-xl font-bold font-mono text-white mt-1.5">
+                    {count}
+                  </div>
                 </button>
               );
             })}
@@ -330,11 +368,11 @@ export const MemoryContextPage: React.FC = () => {
         {/* Category Pills */}
         <div className="flex items-center space-x-1.5 overflow-x-auto pb-2 md:pb-0 scrollbar-thin">
           {CATEGORIES.map((cat) => {
-            const isSelected = (!activeCategory && cat.key === 'all') || activeCategory === cat.key;
+            const isSelected =
+              (!activeCategory && cat.key === "all") ||
+              activeCategory === cat.key;
             const count =
-              cat.key === 'all'
-                ? totalCount
-                : categoryCounts[cat.key] || 0;
+              cat.key === "all" ? totalCount : categoryCounts[cat.key] || 0;
 
             return (
               <button
@@ -342,15 +380,17 @@ export const MemoryContextPage: React.FC = () => {
                 onClick={() => handleCategorySelect(cat.key)}
                 className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors border ${
                   isSelected
-                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm'
-                    : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:bg-slate-850 hover:text-slate-200'
+                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm"
+                    : "bg-slate-900/60 text-slate-400 border-slate-800 hover:bg-slate-850 hover:text-slate-200"
                 }`}
               >
                 {cat.icon}
                 <span>{cat.label}</span>
                 <span
                   className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
-                    isSelected ? 'bg-emerald-500/30 text-emerald-200' : 'bg-slate-800 text-slate-400'
+                    isSelected
+                      ? "bg-emerald-500/30 text-emerald-200"
+                      : "bg-slate-800 text-slate-400"
                   }`}
                 >
                   {count}
@@ -373,7 +413,7 @@ export const MemoryContextPage: React.FC = () => {
             />
             {searchQuery && (
               <button
-                onClick={() => setSearchQuery('')}
+                onClick={() => setSearchQuery("")}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
               >
                 <X className="w-3.5 h-3.5" />
@@ -384,7 +424,7 @@ export const MemoryContextPage: React.FC = () => {
           {/* Goal Linkage Dropdown */}
           <div className="relative">
             <select
-              value={activeGoalId || ''}
+              value={activeGoalId || ""}
               onChange={(e) => handleGoalSelect(e.target.value)}
               className="bg-slate-900/80 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-emerald-500 appearance-none pr-8 cursor-pointer"
             >
@@ -406,7 +446,10 @@ export const MemoryContextPage: React.FC = () => {
       {isLoadingMemories ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="p-5 rounded-2xl border border-slate-800 bg-slate-900/40 space-y-3">
+            <div
+              key={i}
+              className="p-5 rounded-2xl border border-slate-800 bg-slate-900/40 space-y-3"
+            >
               <div className="flex justify-between items-center">
                 <Skeleton className="h-5 w-24" />
                 <Skeleton className="h-5 w-16" />
@@ -425,7 +468,9 @@ export const MemoryContextPage: React.FC = () => {
             <AlertTriangle className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-white">Failed to retrieve memories</h3>
+            <h3 className="text-sm font-semibold text-white">
+              Failed to retrieve memories
+            </h3>
             <p className="text-xs text-rose-300/80 max-w-md mx-auto mt-1">
               Unable to load persisted memory vectors from backend services.
             </p>
@@ -445,20 +490,20 @@ export const MemoryContextPage: React.FC = () => {
           title="No Persisted Memories Found"
           description={
             searchQuery || activeCategory || activeGoalId
-              ? 'No memories match your active filter or search query.'
-              : 'As you decompose goals, complete tasks, or run autonomous learning loops, memories will be securely recorded here.'
+              ? "No memories match your active filter or search query."
+              : "As you decompose goals, complete tasks, or run autonomous learning loops, memories will be securely recorded here."
           }
           action={
             searchQuery || activeCategory || activeGoalId
               ? {
-                  label: 'Reset Filters',
+                  label: "Reset Filters",
                   onClick: () => {
-                    setSearchQuery('');
+                    setSearchQuery("");
                     setSearchParams({});
                   },
                 }
               : {
-                  label: 'Add Manual Memory',
+                  label: "Add Manual Memory",
                   icon: Plus,
                   onClick: () => setIsCreateOpen(true),
                 }
@@ -466,7 +511,7 @@ export const MemoryContextPage: React.FC = () => {
           secondaryAction={
             searchQuery || activeCategory || activeGoalId
               ? {
-                  label: 'Add Manual Memory',
+                  label: "Add Manual Memory",
                   onClick: () => setIsCreateOpen(true),
                 }
               : undefined
@@ -500,11 +545,12 @@ export const MemoryContextPage: React.FC = () => {
                       </span>
                     )}
 
-                    {mem.source_details?.is_hypothesis && !mem.source_details?.user_corrected && (
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-950/60 text-amber-400 border border-amber-800/50">
-                        Provisional
-                      </span>
-                    )}
+                    {mem.source_details?.is_hypothesis &&
+                      !mem.source_details?.user_corrected && (
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-950/60 text-amber-400 border border-amber-800/50">
+                          Provisional
+                        </span>
+                      )}
                   </div>
 
                   {/* Confidence Meter Badge */}
@@ -516,10 +562,10 @@ export const MemoryContextPage: React.FC = () => {
                     <span
                       className={
                         confidencePercent >= 90
-                          ? 'text-emerald-400'
+                          ? "text-emerald-400"
                           : confidencePercent >= 70
-                          ? 'text-sky-400'
-                          : 'text-amber-400'
+                            ? "text-sky-400"
+                            : "text-amber-400"
                       }
                     >
                       {confidencePercent}%
@@ -546,7 +592,9 @@ export const MemoryContextPage: React.FC = () => {
                         className="text-emerald-400 hover:text-emerald-300 font-medium truncate inline-flex items-center space-x-1"
                         title={mem.related_goal.title}
                       >
-                        <span className="truncate">{mem.related_goal.title}</span>
+                        <span className="truncate">
+                          {mem.related_goal.title}
+                        </span>
                         <ExternalLink className="w-2.5 h-2.5 shrink-0" />
                       </Link>
                     </div>
@@ -557,7 +605,10 @@ export const MemoryContextPage: React.FC = () => {
                     <div className="flex items-center space-x-1.5 truncate max-w-[200px] sm:max-w-xs">
                       <Compass className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                       <span className="text-slate-500">Source:</span>
-                      <span className="font-mono text-slate-300 truncate" title={mem.source}>
+                      <span
+                        className="font-mono text-slate-300 truncate"
+                        title={mem.source}
+                      >
                         {mem.source_details?.provenance || mem.source}
                       </span>
                     </div>
@@ -629,25 +680,37 @@ export const MemoryContextPage: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="p-3 rounded-lg bg-slate-900/60 border border-slate-800 space-y-1">
-                <span className="text-slate-500 font-mono">Provenance Origin</span>
-                <p className="font-semibold text-slate-200">{inspectItem.source}</p>
-              </div>
-
-              <div className="p-3 rounded-lg bg-slate-900/60 border border-slate-800 space-y-1">
-                <span className="text-slate-500 font-mono">Category</span>
-                <p className="font-semibold text-emerald-400">{inspectItem.category}</p>
-              </div>
-
-              <div className="p-3 rounded-lg bg-slate-900/60 border border-slate-800 space-y-1">
-                <span className="text-slate-500 font-mono">Epistemic Status</span>
+                <span className="text-slate-500 font-mono">
+                  Provenance Origin
+                </span>
                 <p className="font-semibold text-slate-200">
-                  {inspectItem.source_details?.epistemic_qualifier ||
-                    (inspectItem.source_details?.is_hypothesis ? 'Hypothesis' : 'Verified Observation')}
+                  {inspectItem.source}
                 </p>
               </div>
 
               <div className="p-3 rounded-lg bg-slate-900/60 border border-slate-800 space-y-1">
-                <span className="text-slate-500 font-mono">Confidence Level</span>
+                <span className="text-slate-500 font-mono">Category</span>
+                <p className="font-semibold text-emerald-400">
+                  {inspectItem.category}
+                </p>
+              </div>
+
+              <div className="p-3 rounded-lg bg-slate-900/60 border border-slate-800 space-y-1">
+                <span className="text-slate-500 font-mono">
+                  Epistemic Status
+                </span>
+                <p className="font-semibold text-slate-200">
+                  {inspectItem.source_details?.epistemic_qualifier ||
+                    (inspectItem.source_details?.is_hypothesis
+                      ? "Hypothesis"
+                      : "Verified Observation")}
+                </p>
+              </div>
+
+              <div className="p-3 rounded-lg bg-slate-900/60 border border-slate-800 space-y-1">
+                <span className="text-slate-500 font-mono">
+                  Confidence Level
+                </span>
                 <p className="font-semibold text-white">
                   {(inspectItem.confidence * 100).toFixed(1)}% Certainty
                 </p>
@@ -656,7 +719,9 @@ export const MemoryContextPage: React.FC = () => {
 
             {inspectItem.source_details?.task_title && (
               <div className="p-3 rounded-lg bg-slate-900/60 border border-slate-800 text-xs space-y-1">
-                <span className="text-slate-500 font-mono">Originating Task</span>
+                <span className="text-slate-500 font-mono">
+                  Originating Task
+                </span>
                 <p className="text-slate-200 font-medium">
                   {inspectItem.source_details.task_title}
                 </p>
@@ -665,7 +730,9 @@ export const MemoryContextPage: React.FC = () => {
 
             {inspectItem.source_details?.original_content && (
               <div className="p-3 rounded-lg bg-amber-950/20 border border-amber-800/40 text-xs space-y-1">
-                <span className="text-amber-400 font-mono font-medium">Original Text Before User Correction</span>
+                <span className="text-amber-400 font-mono font-medium">
+                  Original Text Before User Correction
+                </span>
                 <p className="text-slate-300 italic">
                   &ldquo;{inspectItem.source_details.original_content}&rdquo;
                 </p>
@@ -673,14 +740,24 @@ export const MemoryContextPage: React.FC = () => {
             )}
 
             <div className="space-y-1">
-              <span className="text-xs font-mono text-slate-400">Raw Metadata Attributes</span>
+              <span className="text-xs font-mono text-slate-400">
+                Raw Metadata Attributes
+              </span>
               <pre className="p-3 rounded-lg bg-slate-950 border border-slate-800 font-mono text-[11px] text-slate-300 overflow-x-auto max-h-48 scrollbar-thin">
-                {JSON.stringify(inspectItem.source_details?.raw_metadata || {}, null, 2)}
+                {JSON.stringify(
+                  inspectItem.source_details?.raw_metadata || {},
+                  null,
+                  2,
+                )}
               </pre>
             </div>
 
             <div className="pt-2 flex justify-end">
-              <Button onClick={() => setInspectItem(null)} variant="outline" size="sm">
+              <Button
+                onClick={() => setInspectItem(null)}
+                variant="outline"
+                size="sm"
+              >
                 Close
               </Button>
             </div>
@@ -699,14 +776,16 @@ export const MemoryContextPage: React.FC = () => {
         >
           <form onSubmit={handleSaveCorrection} className="space-y-4">
             <p className="text-xs text-slate-400">
-              Modify this memory to reflect the accurate truth. LifeThread will update its context and
-              mark this entry as user-corrected.
+              Modify this memory to reflect the accurate truth. LifeThread will
+              update its context and mark this entry as user-corrected.
             </p>
 
             {editError && <Alert variant="error">{editError}</Alert>}
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-300">Memory Statement</label>
+              <label className="text-xs font-medium text-slate-300">
+                Memory Statement
+              </label>
               <textarea
                 value={correctedText}
                 onChange={(e) => setCorrectedText(e.target.value)}
@@ -719,10 +798,14 @@ export const MemoryContextPage: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-300">Category</label>
+                <label className="text-xs font-medium text-slate-300">
+                  Category
+                </label>
                 <select
                   value={correctedCategory}
-                  onChange={(e) => setCorrectedCategory(e.target.value as MemoryCategory)}
+                  onChange={(e) =>
+                    setCorrectedCategory(e.target.value as MemoryCategory)
+                  }
                   className="w-full bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
                 >
                   <option value="Goal memory">Goal memory</option>
@@ -743,7 +826,9 @@ export const MemoryContextPage: React.FC = () => {
                   max="1.0"
                   step="0.05"
                   value={correctedConfidence}
-                  onChange={(e) => setCorrectedConfidence(parseFloat(e.target.value))}
+                  onChange={(e) =>
+                    setCorrectedConfidence(parseFloat(e.target.value))
+                  }
                   className="w-full accent-emerald-500 cursor-pointer mt-2"
                 />
               </div>
@@ -763,7 +848,7 @@ export const MemoryContextPage: React.FC = () => {
                 disabled={correctMutation.isPending}
                 size="sm"
               >
-                {correctMutation.isPending ? 'Saving...' : 'Save Correction'}
+                {correctMutation.isPending ? "Saving..." : "Save Correction"}
               </Button>
             </div>
           </form>
@@ -781,7 +866,7 @@ export const MemoryContextPage: React.FC = () => {
         message={
           deletingItem
             ? `Are you sure you want to permanently delete this memory? LifeThread agents will no longer reference it for planning or execution decisions.\n\n"${deletingItem.memory}"`
-            : ''
+            : ""
         }
         confirmText="Delete Memory"
         variant="danger"
@@ -799,13 +884,16 @@ export const MemoryContextPage: React.FC = () => {
         >
           <form onSubmit={handleCreateSubmit} className="space-y-4">
             <p className="text-xs text-slate-400">
-              Explicitly teach LifeThread a preference, personal work style rule, or goal constraint.
+              Explicitly teach LifeThread a preference, personal work style
+              rule, or goal constraint.
             </p>
 
             {createError && <Alert variant="error">{createError}</Alert>}
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-300">Memory Statement</label>
+              <label className="text-xs font-medium text-slate-300">
+                Memory Statement
+              </label>
               <textarea
                 value={newContent}
                 onChange={(e) => setNewContent(e.target.value)}
@@ -818,10 +906,14 @@ export const MemoryContextPage: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-300">Category</label>
+                <label className="text-xs font-medium text-slate-300">
+                  Category
+                </label>
                 <select
                   value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value as MemoryCategory)}
+                  onChange={(e) =>
+                    setNewCategory(e.target.value as MemoryCategory)
+                  }
                   className="w-full bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
                 >
                   <option value="Preference">Preference</option>
@@ -833,7 +925,9 @@ export const MemoryContextPage: React.FC = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-300">Linked Goal (Optional)</label>
+                <label className="text-xs font-medium text-slate-300">
+                  Linked Goal (Optional)
+                </label>
                 <select
                   value={newGoalId}
                   onChange={(e) => setNewGoalId(e.target.value)}
@@ -878,7 +972,7 @@ export const MemoryContextPage: React.FC = () => {
                 disabled={createMutation.isPending}
                 size="sm"
               >
-                {createMutation.isPending ? 'Saving...' : 'Add Memory'}
+                {createMutation.isPending ? "Saving..." : "Add Memory"}
               </Button>
             </div>
           </form>

@@ -1,21 +1,30 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Globe, Lock, Mail, Sparkles, User as UserIcon } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { Button } from '../components/ui/Button';
-import { Input } from '../components/ui/Input';
-import { Alert } from '../components/ui/Alert';
-import { APIError } from '../types/api';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  ArrowRight,
+  Globe,
+  Lock,
+  Mail,
+  Sparkles,
+  User as UserIcon,
+} from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { Button } from "../components/ui/Button";
+import { Input } from "../components/ui/Input";
+import { Alert } from "../components/ui/Alert";
+import { APIError } from "../types/api";
 
 export const RegisterPage: React.FC = () => {
   const { register, login } = useAuth();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [timezone] = useState(
-    Intl?.DateTimeFormat ? Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC' : 'UTC'
+    Intl?.DateTimeFormat
+      ? Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"
+      : "UTC",
   );
 
   const [isLoading, setIsLoading] = useState(false);
@@ -24,12 +33,12 @@ export const RegisterPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      setErrorMessage('Please fill in both email and password');
+      setErrorMessage("Please fill in both email and password");
       return;
     }
 
     if (password.length < 8) {
-      setErrorMessage('Password must be at least 8 characters');
+      setErrorMessage("Password must be at least 8 characters");
       return;
     }
 
@@ -46,12 +55,12 @@ export const RegisterPage: React.FC = () => {
 
       // Auto login after successful registration
       await login({ email, password });
-      navigate('/dashboard', { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       if (err instanceof APIError) {
-        setErrorMessage(err.message || 'Registration failed');
+        setErrorMessage(err.message || "Registration failed");
       } else {
-        setErrorMessage('Failed to register account. Please try again.');
+        setErrorMessage("Failed to register account. Please try again.");
       }
     } finally {
       setIsLoading(false);
@@ -71,8 +80,12 @@ export const RegisterPage: React.FC = () => {
             </div>
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-white">LifeThread</h1>
-            <p className="text-xs text-slate-400 font-mono">Autonomous AI Platform</p>
+            <h1 className="text-2xl font-bold tracking-tight text-white">
+              LifeThread
+            </h1>
+            <p className="text-xs text-slate-400 font-mono">
+              Autonomous AI Platform
+            </p>
           </div>
         </div>
 
@@ -158,7 +171,7 @@ export const RegisterPage: React.FC = () => {
 
           <div className="border-t border-slate-800/80 pt-4 text-center">
             <p className="text-xs text-slate-400">
-              Already have an account?{' '}
+              Already have an account?{" "}
               <Link
                 to="/login"
                 className="text-emerald-400 hover:text-emerald-300 font-medium underline-offset-4 hover:underline"

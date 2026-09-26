@@ -1,27 +1,27 @@
 export type AgentIntent =
-  | 'CREATE_GOAL'
-  | 'NEXT_ACTION'
-  | 'WHAT_CHANGED'
-  | 'WHY_PLAN_CHANGED'
-  | 'CAPACITY_CONSTRAINT'
-  | 'REMEMBER_FACT'
-  | 'WHAT_IS_BLOCKING'
-  | 'COMPLETE_TASK'
-  | 'SWITCH_GOAL'
-  | 'CHANGE_DEADLINE'
-  | 'UPDATE_PRIORITY'
-  | 'CLARIFICATION_ANSWER'
-  | 'MILESTONE_QUERY'
-  | 'MEMORY_QUERY'
-  | 'GENERAL_STATUS'
-  | 'UNKNOWN';
+  | "CREATE_GOAL"
+  | "NEXT_ACTION"
+  | "WHAT_CHANGED"
+  | "WHY_PLAN_CHANGED"
+  | "CAPACITY_CONSTRAINT"
+  | "REMEMBER_FACT"
+  | "WHAT_IS_BLOCKING"
+  | "COMPLETE_TASK"
+  | "SWITCH_GOAL"
+  | "CHANGE_DEADLINE"
+  | "UPDATE_PRIORITY"
+  | "CLARIFICATION_ANSWER"
+  | "MILESTONE_QUERY"
+  | "MEMORY_QUERY"
+  | "GENERAL_STATUS"
+  | "UNKNOWN";
 
-export type ChatMessageRole = 'user' | 'assistant' | 'system';
+export type ChatMessageRole = "user" | "assistant" | "system";
 
 export interface ClarificationOption {
   id: string;
   label: string;
-  entity_type: 'goal' | 'task' | 'milestone' | 'memory' | string;
+  entity_type: "goal" | "task" | "milestone" | "memory" | string;
   entity_id: string;
   description?: string | null;
 }
@@ -108,4 +108,3 @@ export interface ConversationContextSummary {
   preferences_count: number;
   recent_intents: string[];
 }
-

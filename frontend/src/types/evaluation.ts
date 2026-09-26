@@ -1,6 +1,6 @@
 export interface Weakness {
   type: string;
-  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   description: string;
   impact_score: number;
   recommendation?: string;
@@ -9,7 +9,7 @@ export interface Weakness {
 
 export interface RiskAssessment {
   overall_risk_score: number;
-  risk_level: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  risk_level: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   primary_risk_driver?: string;
   mitigation_strategy?: string;
 }
@@ -22,7 +22,7 @@ export interface GoalEvaluation {
   weighted_progress: number;
   performance_score: number;
   consistency_score: number;
-  deadline_risk: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  deadline_risk: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   remaining_workload_minutes: number;
   total_tasks: number;
   completed_tasks: number;

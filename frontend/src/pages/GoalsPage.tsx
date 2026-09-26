@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
   Calendar,
@@ -10,35 +10,41 @@ import {
   Search,
   Sparkles,
   Target,
-} from 'lucide-react';
-import { goalService } from '../services/goalService';
-import { GoalCreatePayload, GoalPriority, GoalStatus } from '../types/goal';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
-import { Input } from '../components/ui/Input';
-import { Skeleton } from '../components/ui/Skeleton';
-import { Alert } from '../components/ui/Alert';
-import { Modal } from '../components/ui/Modal';
-import { EmptyState } from '../components/ui/EmptyState';
-import { APIError } from '../types/api';
+} from "lucide-react";
+import { goalService } from "../services/goalService";
+import { GoalCreatePayload, GoalPriority, GoalStatus } from "../types/goal";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/Card";
+import { Button } from "../components/ui/Button";
+import { Badge } from "../components/ui/Badge";
+import { Input } from "../components/ui/Input";
+import { Skeleton } from "../components/ui/Skeleton";
+import { Alert } from "../components/ui/Alert";
+import { Modal } from "../components/ui/Modal";
+import { EmptyState } from "../components/ui/EmptyState";
+import { APIError } from "../types/api";
 
 export const GoalsPage: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   // Filters & State
-  const [statusFilter, setStatusFilter] = useState<GoalStatus | 'all'>('all');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<GoalStatus | "all">("all");
+  const [searchTerm, setSearchTerm] = useState("");
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   // New Goal Form State
-  const [title, setTitle] = useState('');
-  const [objective, setObjective] = useState('');
-  const [description, setDescription] = useState('');
-  const [priority, setPriority] = useState<GoalPriority>('medium');
-  const [deadline, setDeadline] = useState('');
-  const [naturalPrompt, setNaturalPrompt] = useState('');
+  const [title, setTitle] = useState("");
+  const [objective, setObjective] = useState("");
+  const [description, setDescription] = useState("");
+  const [priority, setPriority] = useState<GoalPriority>("medium");
+  const [deadline, setDeadline] = useState("");
+  const [naturalPrompt, setNaturalPrompt] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
 
   // Goal Understanding Mutation
@@ -62,7 +68,9 @@ export const GoalsPage: React.FC = () => {
       if (err instanceof APIError) {
         setFormError(err.message);
       } else {
-        setFormError('Goal understanding failed. Please enter parameters manually.');
+        setFormError(
+          "Goal understanding failed. Please enter parameters manually.",
+        );
       }
     },
   });
@@ -75,10 +83,10 @@ export const GoalsPage: React.FC = () => {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['goals', statusFilter],
+    queryKey: ["goals", statusFilter],
     queryFn: () =>
       goalService.listGoals({
-        status: statusFilter === 'all' ? undefined : statusFilter,
+        status: statusFilter === "all" ? undefined : statusFilter,
         limit: 100,
       }),
   });
@@ -87,7 +95,7 @@ export const GoalsPage: React.FC = () => {
   const createMutation = useMutation({
     mutationFn: (payload: GoalCreatePayload) => goalService.createGoal(payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['goals'] });
+      queryClient.invalidateQueries({ queryKey: ["goals"] });
       setIsCreateOpen(false);
       resetForm();
     },
@@ -95,29 +103,29 @@ export const GoalsPage: React.FC = () => {
       if (err instanceof APIError) {
         setFormError(err.message);
       } else {
-        setFormError('Failed to create goal. Please review your inputs.');
+        setFormError("Failed to create goal. Please review your inputs.");
       }
     },
   });
 
   const resetForm = () => {
-    setNaturalPrompt('');
-    setTitle('');
-    setObjective('');
-    setDescription('');
-    setPriority('medium');
-    setDeadline('');
+    setNaturalPrompt("");
+    setTitle("");
+    setObjective("");
+    setDescription("");
+    setPriority("medium");
+    setDeadline("");
     setFormError(null);
   };
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (title.trim().length < 3) {
-      setFormError('Title must be at least 3 characters');
+      setFormError("Title must be at least 3 characters");
       return;
     }
     if (objective.trim().length < 5) {
-      setFormError('Objective must be at least 5 characters');
+      setFormError("Objective must be at least 5 characters");
       return;
     }
 
@@ -138,15 +146,18 @@ export const GoalsPage: React.FC = () => {
   // Filtered Goals
   const filteredGoals = (goalsData?.items || []).filter((g) => {
     const term = searchTerm.toLowerCase();
-    return g.title.toLowerCase().includes(term) || g.objective.toLowerCase().includes(term);
+    return (
+      g.title.toLowerCase().includes(term) ||
+      g.objective.toLowerCase().includes(term)
+    );
   });
 
-  const statusTabs: Array<{ id: GoalStatus | 'all'; label: string }> = [
-    { id: 'all', label: 'All Goals' },
-    { id: 'active', label: 'Active' },
-    { id: 'paused', label: 'Paused' },
-    { id: 'completed', label: 'Completed' },
-    { id: 'failed', label: 'Failed' },
+  const statusTabs: Array<{ id: GoalStatus | "all"; label: string }> = [
+    { id: "all", label: "All Goals" },
+    { id: "active", label: "Active" },
+    { id: "paused", label: "Paused" },
+    { id: "completed", label: "Completed" },
+    { id: "failed", label: "Failed" },
   ];
 
   return (
@@ -184,8 +195,8 @@ export const GoalsPage: React.FC = () => {
               onClick={() => setStatusFilter(tab.id)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
                 statusFilter === tab.id
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800"
               }`}
             >
               {tab.label}
@@ -213,9 +224,13 @@ export const GoalsPage: React.FC = () => {
             <AlertTriangle className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-white">Failed to load goals</h3>
+            <h3 className="text-sm font-semibold text-white">
+              Failed to load goals
+            </h3>
             <p className="text-xs text-rose-300/80 max-w-md mx-auto mt-1">
-              {error instanceof Error ? error.message : 'Error fetching goals from the server.'}
+              {error instanceof Error
+                ? error.message
+                : "Error fetching goals from the server."}
             </p>
           </div>
           <Button
@@ -253,7 +268,7 @@ export const GoalsPage: React.FC = () => {
             title="No Autonomous Goals Created Yet"
             description="Orchestrate long-horizon AI execution by defining your first goal or using natural language interpretation."
             action={{
-              label: 'Create Your First Goal',
+              label: "Create Your First Goal",
               icon: Plus,
               onClick: () => {
                 resetForm();
@@ -271,14 +286,14 @@ export const GoalsPage: React.FC = () => {
                 : `No goals found with active status filter "${statusFilter}".`
             }
             action={{
-              label: 'Clear Filters',
+              label: "Clear Filters",
               onClick: () => {
-                setSearchTerm('');
-                setStatusFilter('all');
+                setSearchTerm("");
+                setStatusFilter("all");
               },
             }}
             secondaryAction={{
-              label: 'Create New Goal',
+              label: "Create New Goal",
               onClick: () => {
                 resetForm();
                 setIsCreateOpen(true);
@@ -314,7 +329,7 @@ export const GoalsPage: React.FC = () => {
                   <span>
                     {goal.deadline
                       ? new Date(goal.deadline).toLocaleDateString()
-                      : 'No deadline'}
+                      : "No deadline"}
                   </span>
                 </div>
                 <span className="text-emerald-400/80 group-hover:text-emerald-300 font-mono text-[11px]">
@@ -336,7 +351,11 @@ export const GoalsPage: React.FC = () => {
       >
         <form onSubmit={handleCreateSubmit} className="space-y-4 pt-2">
           {formError && (
-            <Alert variant="error" title="Creation Error" onDismiss={() => setFormError(null)}>
+            <Alert
+              variant="error"
+              title="Creation Error"
+              onDismiss={() => setFormError(null)}
+            >
               {formError}
             </Alert>
           )}
@@ -348,7 +367,9 @@ export const GoalsPage: React.FC = () => {
                 <Sparkles className="w-3.5 h-3.5" />
                 AI Goal Understanding Assist
               </span>
-              <span className="text-[10px] text-slate-400">Natural language interpretation</span>
+              <span className="text-[10px] text-slate-400">
+                Natural language interpretation
+              </span>
             </div>
             <div className="flex gap-2">
               <input

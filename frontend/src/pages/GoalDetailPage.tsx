@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import React, { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   ArrowRight,
@@ -22,30 +22,37 @@ import {
   Sparkles,
   Trash2,
   TrendingUp,
-} from 'lucide-react';
-import { goalService } from '../services/goalService';
-import { GoalPriority } from '../types/goal';
-import { Task, TaskStatus, TaskUpdatePayload } from '../types/task';
+} from "lucide-react";
+import { goalService } from "../services/goalService";
+import { GoalPriority } from "../types/goal";
+import { Task, TaskStatus, TaskUpdatePayload } from "../types/task";
 import {
   calculateDeadlineRisk,
   calculateGoalProgress,
   formatRelativeTime,
   getGoalNextAction,
-} from '../utils/dashboardMetrics';
-import { Button } from '../components/ui/Button';
-import { Badge } from '../components/ui/Badge';
-import { Progress } from '../components/ui/Progress';
-import { Card, CardContent } from '../components/ui/Card';
-import { Skeleton } from '../components/ui/Skeleton';
-import { Alert } from '../components/ui/Alert';
-import { Modal } from '../components/ui/Modal';
-import { Input } from '../components/ui/Input';
-import { EmptyState } from '../components/ui/EmptyState';
-import { ConfirmDialog } from '../components/ui/ConfirmDialog';
-import { APIError } from '../types/api';
-import { ReplanningDiffViewer } from '../components/replanning/ReplanningDiffViewer';
+} from "../utils/dashboardMetrics";
+import { Button } from "../components/ui/Button";
+import { Badge } from "../components/ui/Badge";
+import { Progress } from "../components/ui/Progress";
+import { Card, CardContent } from "../components/ui/Card";
+import { Skeleton } from "../components/ui/Skeleton";
+import { Alert } from "../components/ui/Alert";
+import { Modal } from "../components/ui/Modal";
+import { Input } from "../components/ui/Input";
+import { EmptyState } from "../components/ui/EmptyState";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { APIError } from "../types/api";
+import { ReplanningDiffViewer } from "../components/replanning/ReplanningDiffViewer";
 
-type TabType = 'overview' | 'tasks' | 'dependencies' | 'timeline' | 'risk' | 'versions' | 'replanning';
+type TabType =
+  | "overview"
+  | "tasks"
+  | "dependencies"
+  | "timeline"
+  | "risk"
+  | "versions"
+  | "replanning";
 
 export const GoalDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -53,19 +60,21 @@ export const GoalDetailPage: React.FC = () => {
   const queryClient = useQueryClient();
   const goalId = id!;
 
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [activeTab, setActiveTab] = useState<TabType>("overview");
 
   // Task edit modal state
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [taskTitle, setTaskTitle] = useState('');
-  const [taskDescription, setTaskDescription] = useState('');
-  const [taskPriority, setTaskPriority] = useState<GoalPriority>('medium');
-  const [taskStatus, setTaskStatus] = useState<TaskStatus>('PENDING');
+  const [taskTitle, setTaskTitle] = useState("");
+  const [taskDescription, setTaskDescription] = useState("");
+  const [taskPriority, setTaskPriority] = useState<GoalPriority>("medium");
+  const [taskStatus, setTaskStatus] = useState<TaskStatus>("PENDING");
   const [taskEstMinutes, setTaskEstMinutes] = useState(60);
   const [taskError, setTaskError] = useState<string | null>(null);
 
   // Selected historical plan version modal state
-  const [selectedPlanVersion, setSelectedPlanVersion] = useState<number | null>(null);
+  const [selectedPlanVersion, setSelectedPlanVersion] = useState<number | null>(
+    null,
+  );
 
   // Goal deletion confirmation state
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -78,48 +87,36 @@ export const GoalDetailPage: React.FC = () => {
     error: goalError,
     refetch: refetchGoal,
   } = useQuery({
-    queryKey: ['goal', goalId],
+    queryKey: ["goal", goalId],
     queryFn: () => goalService.getGoal(goalId),
     enabled: Boolean(goalId),
   });
 
   // 2. Fetch Tasks
-  const {
-    data: tasksData,
-    isLoading: isLoadingTasks,
-  } = useQuery({
-    queryKey: ['goalTasks', goalId],
+  const { data: tasksData, isLoading: isLoadingTasks } = useQuery({
+    queryKey: ["goalTasks", goalId],
     queryFn: () => goalService.getTasks(goalId),
     enabled: Boolean(goalId),
   });
 
   // 3. Fetch Dependencies Graph
-  const {
-    data: dependencyGraph,
-    isLoading: isLoadingDependencies,
-  } = useQuery({
-    queryKey: ['goalDependencies', goalId],
+  const { data: dependencyGraph, isLoading: isLoadingDependencies } = useQuery({
+    queryKey: ["goalDependencies", goalId],
     queryFn: () => goalService.getDependencies(goalId),
     enabled: Boolean(goalId),
   });
 
   // 4. Fetch Active Execution Plan (Timeline)
-  const {
-    data: activePlan,
-    isLoading: isLoadingPlan,
-  } = useQuery({
-    queryKey: ['goalActivePlan', goalId],
+  const { data: activePlan, isLoading: isLoadingPlan } = useQuery({
+    queryKey: ["goalActivePlan", goalId],
     queryFn: () => goalService.getActivePlan(goalId),
     enabled: Boolean(goalId),
     retry: false, // may not have generated plan yet
   });
 
   // 5. Fetch Plan Versions History
-  const {
-    data: planVersionsData,
-    isLoading: isLoadingVersions,
-  } = useQuery({
-    queryKey: ['goalPlans', goalId],
+  const { data: planVersionsData, isLoading: isLoadingVersions } = useQuery({
+    queryKey: ["goalPlans", goalId],
     queryFn: () => goalService.getPlans(goalId),
     enabled: Boolean(goalId),
     retry: false,
@@ -132,21 +129,19 @@ export const GoalDetailPage: React.FC = () => {
     refetch: refetchEvaluation,
     isFetching: isFetchingEvaluation,
   } = useQuery({
-    queryKey: ['goalEvaluation', goalId],
+    queryKey: ["goalEvaluation", goalId],
     queryFn: () => goalService.evaluateGoal(goalId),
     enabled: Boolean(goalId),
     retry: false,
   });
 
   // Fetch specific historical plan version if modal open
-  const {
-    data: historicalPlanDetail,
-    isLoading: isLoadingHistoricalPlan,
-  } = useQuery({
-    queryKey: ['goalPlanVersion', goalId, selectedPlanVersion],
-    queryFn: () => goalService.getPlanByVersion(goalId, selectedPlanVersion!),
-    enabled: Boolean(goalId && selectedPlanVersion !== null),
-  });
+  const { data: historicalPlanDetail, isLoading: isLoadingHistoricalPlan } =
+    useQuery({
+      queryKey: ["goalPlanVersion", goalId, selectedPlanVersion],
+      queryFn: () => goalService.getPlanByVersion(goalId, selectedPlanVersion!),
+      enabled: Boolean(goalId && selectedPlanVersion !== null),
+    });
 
   // ================= MUTATIONS =================
 
@@ -155,8 +150,8 @@ export const GoalDetailPage: React.FC = () => {
     mutationFn: (newPriority: GoalPriority) =>
       goalService.updateGoal(goalId, { priority: newPriority }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['goal', goalId] });
-      queryClient.invalidateQueries({ queryKey: ['goals'] });
+      queryClient.invalidateQueries({ queryKey: ["goal", goalId] });
+      queryClient.invalidateQueries({ queryKey: ["goals"] });
     },
   });
 
@@ -164,32 +159,32 @@ export const GoalDetailPage: React.FC = () => {
   const pauseMutation = useMutation({
     mutationFn: () => goalService.pauseGoal(goalId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['goal', goalId] });
-      queryClient.invalidateQueries({ queryKey: ['goals'] });
+      queryClient.invalidateQueries({ queryKey: ["goal", goalId] });
+      queryClient.invalidateQueries({ queryKey: ["goals"] });
     },
   });
 
   const resumeMutation = useMutation({
     mutationFn: () => goalService.resumeGoal(goalId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['goal', goalId] });
-      queryClient.invalidateQueries({ queryKey: ['goals'] });
+      queryClient.invalidateQueries({ queryKey: ["goal", goalId] });
+      queryClient.invalidateQueries({ queryKey: ["goals"] });
     },
   });
 
   const completeGoalMutation = useMutation({
     mutationFn: () => goalService.completeGoal(goalId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['goal', goalId] });
-      queryClient.invalidateQueries({ queryKey: ['goals'] });
+      queryClient.invalidateQueries({ queryKey: ["goal", goalId] });
+      queryClient.invalidateQueries({ queryKey: ["goals"] });
     },
   });
 
   const deleteGoalMutation = useMutation({
     mutationFn: () => goalService.deleteGoal(goalId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['goals'] });
-      navigate('/goals');
+      queryClient.invalidateQueries({ queryKey: ["goals"] });
+      navigate("/goals");
     },
   });
 
@@ -197,28 +192,33 @@ export const GoalDetailPage: React.FC = () => {
   const completeTaskMutation = useMutation({
     mutationFn: (taskId: string) => goalService.completeTask(goalId, taskId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['goalTasks', goalId] });
-      queryClient.invalidateQueries({ queryKey: ['goal', goalId] });
-      queryClient.invalidateQueries({ queryKey: ['goalDependencies', goalId] });
-      queryClient.invalidateQueries({ queryKey: ['goalEvaluation', goalId] });
+      queryClient.invalidateQueries({ queryKey: ["goalTasks", goalId] });
+      queryClient.invalidateQueries({ queryKey: ["goal", goalId] });
+      queryClient.invalidateQueries({ queryKey: ["goalDependencies", goalId] });
+      queryClient.invalidateQueries({ queryKey: ["goalEvaluation", goalId] });
     },
   });
 
   const updateTaskMutation = useMutation({
-    mutationFn: ({ taskId, payload }: { taskId: string; payload: TaskUpdatePayload }) =>
-      goalService.updateTask(goalId, taskId, payload),
+    mutationFn: ({
+      taskId,
+      payload,
+    }: {
+      taskId: string;
+      payload: TaskUpdatePayload;
+    }) => goalService.updateTask(goalId, taskId, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['goalTasks', goalId] });
-      queryClient.invalidateQueries({ queryKey: ['goal', goalId] });
-      queryClient.invalidateQueries({ queryKey: ['goalDependencies', goalId] });
-      queryClient.invalidateQueries({ queryKey: ['goalEvaluation', goalId] });
+      queryClient.invalidateQueries({ queryKey: ["goalTasks", goalId] });
+      queryClient.invalidateQueries({ queryKey: ["goal", goalId] });
+      queryClient.invalidateQueries({ queryKey: ["goalDependencies", goalId] });
+      queryClient.invalidateQueries({ queryKey: ["goalEvaluation", goalId] });
       setEditingTask(null);
     },
     onError: (err: unknown) => {
       if (err instanceof APIError) {
         setTaskError(err.message);
       } else {
-        setTaskError('Failed to update task');
+        setTaskError("Failed to update task");
       }
     },
   });
@@ -227,9 +227,9 @@ export const GoalDetailPage: React.FC = () => {
   const generatePlanMutation = useMutation({
     mutationFn: () => goalService.generatePlan(goalId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['goalActivePlan', goalId] });
-      queryClient.invalidateQueries({ queryKey: ['goalPlans', goalId] });
-      queryClient.invalidateQueries({ queryKey: ['goalEvaluation', goalId] });
+      queryClient.invalidateQueries({ queryKey: ["goalActivePlan", goalId] });
+      queryClient.invalidateQueries({ queryKey: ["goalPlans", goalId] });
+      queryClient.invalidateQueries({ queryKey: ["goalEvaluation", goalId] });
     },
   });
 
@@ -237,9 +237,9 @@ export const GoalDetailPage: React.FC = () => {
   const decomposeMutation = useMutation({
     mutationFn: () => goalService.decomposeGoal(goalId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['goalTasks', goalId] });
-      queryClient.invalidateQueries({ queryKey: ['goal', goalId] });
-      queryClient.invalidateQueries({ queryKey: ['goalDependencies', goalId] });
+      queryClient.invalidateQueries({ queryKey: ["goalTasks", goalId] });
+      queryClient.invalidateQueries({ queryKey: ["goal", goalId] });
+      queryClient.invalidateQueries({ queryKey: ["goalDependencies", goalId] });
     },
   });
 
@@ -247,7 +247,7 @@ export const GoalDetailPage: React.FC = () => {
   const openEditTask = (task: Task) => {
     setEditingTask(task);
     setTaskTitle(task.title);
-    setTaskDescription(task.description || '');
+    setTaskDescription(task.description || "");
     setTaskPriority(task.priority);
     setTaskStatus(task.status);
     setTaskEstMinutes(task.estimated_minutes || 60);
@@ -258,7 +258,7 @@ export const GoalDetailPage: React.FC = () => {
     e.preventDefault();
     if (!editingTask) return;
     if (taskTitle.trim().length === 0) {
-      setTaskError('Task title cannot be empty');
+      setTaskError("Task title cannot be empty");
       return;
     }
 
@@ -300,13 +300,19 @@ export const GoalDetailPage: React.FC = () => {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => navigate('/goals')}
+          onClick={() => navigate("/goals")}
           leftIcon={<ArrowLeft className="w-4 h-4" />}
         >
           Back to Goals
         </Button>
-        <Alert variant="error" title="Goal Not Found" onDismiss={() => refetchGoal()}>
-          {goalError instanceof Error ? goalError.message : 'Could not find requested goal record'}
+        <Alert
+          variant="error"
+          title="Goal Not Found"
+          onDismiss={() => refetchGoal()}
+        >
+          {goalError instanceof Error
+            ? goalError.message
+            : "Could not find requested goal record"}
         </Alert>
       </div>
     );
@@ -315,30 +321,40 @@ export const GoalDetailPage: React.FC = () => {
   // Derived real progress and next action
   const progressInfo = calculateGoalProgress(goal);
   const tasks = tasksData?.items || [];
-  const completedTasksCount = tasks.filter((t) => t.status === 'COMPLETED').length;
-  const taskProgressPercent = tasks.length > 0 ? Math.round((completedTasksCount / tasks.length) * 100) : 0;
-  const combinedProgressPercent = tasks.length > 0 ? taskProgressPercent : progressInfo.progressPercent;
+  const completedTasksCount = tasks.filter(
+    (t) => t.status === "COMPLETED",
+  ).length;
+  const taskProgressPercent =
+    tasks.length > 0
+      ? Math.round((completedTasksCount / tasks.length) * 100)
+      : 0;
+  const combinedProgressPercent =
+    tasks.length > 0 ? taskProgressPercent : progressInfo.progressPercent;
 
   // Next action determination: check task in progress first, then task pending, then milestone
-  let nextActionTitle = 'No pending actions';
-  let nextActionType: 'task' | 'milestone' | 'none' = 'none';
-  const inProgressTask = tasks.find((t) => t.status === 'IN_PROGRESS');
-  const pendingTask = tasks.find((t) => t.status === 'PENDING');
+  let nextActionTitle = "No pending actions";
+  let nextActionType: "task" | "milestone" | "none" = "none";
+  const inProgressTask = tasks.find((t) => t.status === "IN_PROGRESS");
+  const pendingTask = tasks.find((t) => t.status === "PENDING");
   const milestoneAction = getGoalNextAction(goal);
 
   if (inProgressTask) {
     nextActionTitle = inProgressTask.title;
-    nextActionType = 'task';
+    nextActionType = "task";
   } else if (pendingTask) {
     nextActionTitle = pendingTask.title;
-    nextActionType = 'task';
-  } else if (milestoneAction.isDefined && milestoneAction.status !== 'none') {
+    nextActionType = "task";
+  } else if (milestoneAction.isDefined && milestoneAction.status !== "none") {
     nextActionTitle = milestoneAction.title;
-    nextActionType = 'milestone';
+    nextActionType = "milestone";
   }
 
   // Deadline Risk calculation
-  const deadlineRisk = calculateDeadlineRisk(goal.deadline, combinedProgressPercent, goal.status);
+  const deadlineRisk = calculateDeadlineRisk(
+    goal.deadline,
+    combinedProgressPercent,
+    goal.status,
+  );
   const planVersions = planVersionsData?.items || [];
 
   return (
@@ -350,7 +366,7 @@ export const GoalDetailPage: React.FC = () => {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => navigate('/goals')}
+          onClick={() => navigate("/goals")}
           leftIcon={<ArrowLeft className="w-4 h-4" />}
         >
           Back to Goals
@@ -358,7 +374,7 @@ export const GoalDetailPage: React.FC = () => {
 
         {/* Lifecycle Action Buttons */}
         <div className="flex items-center space-x-2">
-          {goal.status === 'active' ? (
+          {goal.status === "active" ? (
             <Button
               variant="secondary"
               size="sm"
@@ -368,7 +384,7 @@ export const GoalDetailPage: React.FC = () => {
             >
               Pause Goal
             </Button>
-          ) : goal.status === 'paused' ? (
+          ) : goal.status === "paused" ? (
             <Button
               variant="secondary"
               size="sm"
@@ -380,7 +396,7 @@ export const GoalDetailPage: React.FC = () => {
             </Button>
           ) : null}
 
-          {goal.status !== 'completed' && (
+          {goal.status !== "completed" && (
             <Button
               variant="primary"
               size="sm"
@@ -416,19 +432,37 @@ export const GoalDetailPage: React.FC = () => {
 
               {/* Interactive Priority Selector */}
               <div className="flex items-center space-x-1.5 bg-slate-950 px-2.5 py-1 rounded-full border border-slate-800">
-                <span className="text-[11px] font-mono text-slate-400 uppercase">Priority:</span>
+                <span className="text-[11px] font-mono text-slate-400 uppercase">
+                  Priority:
+                </span>
                 <select
                   value={goal.priority}
                   disabled={priorityMutation.isPending}
-                  onChange={(e) => priorityMutation.mutate(e.target.value as GoalPriority)}
+                  onChange={(e) =>
+                    priorityMutation.mutate(e.target.value as GoalPriority)
+                  }
                   className="bg-transparent text-xs font-semibold text-white uppercase focus:outline-none cursor-pointer"
                   title="Change goal priority rank"
                   aria-label="Change priority"
                 >
-                  <option value="low" className="bg-slate-900 text-slate-300">LOW</option>
-                  <option value="medium" className="bg-slate-900 text-amber-400">MEDIUM</option>
-                  <option value="high" className="bg-slate-900 text-orange-400">HIGH</option>
-                  <option value="critical" className="bg-slate-900 text-rose-400">CRITICAL</option>
+                  <option value="low" className="bg-slate-900 text-slate-300">
+                    LOW
+                  </option>
+                  <option
+                    value="medium"
+                    className="bg-slate-900 text-amber-400"
+                  >
+                    MEDIUM
+                  </option>
+                  <option value="high" className="bg-slate-900 text-orange-400">
+                    HIGH
+                  </option>
+                  <option
+                    value="critical"
+                    className="bg-slate-900 text-rose-400"
+                  >
+                    CRITICAL
+                  </option>
                 </select>
                 {priorityMutation.isPending && (
                   <RefreshCw className="w-3 h-3 text-slate-400 animate-spin" />
@@ -445,7 +479,12 @@ export const GoalDetailPage: React.FC = () => {
           </div>
 
           <div className="text-right text-xs font-mono text-slate-400 space-y-1.5 shrink-0">
-            <div>Goal ID: <span className="text-slate-300">{goal.id.substring(0, 8)}...</span></div>
+            <div>
+              Goal ID:{" "}
+              <span className="text-slate-300">
+                {goal.id.substring(0, 8)}...
+              </span>
+            </div>
             <div>Created: {new Date(goal.created_at).toLocaleDateString()}</div>
             <div>Updated: {new Date(goal.updated_at).toLocaleDateString()}</div>
           </div>
@@ -460,7 +499,7 @@ export const GoalDetailPage: React.FC = () => {
             <div>
               <div className="text-xs uppercase font-mono tracking-wider text-emerald-400 font-semibold flex items-center space-x-2">
                 <span>Immediate Next Action</span>
-                {nextActionType !== 'none' && (
+                {nextActionType !== "none" && (
                   <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-300">
                     Source: {nextActionType}
                   </span>
@@ -476,7 +515,7 @@ export const GoalDetailPage: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setActiveTab('tasks')}
+              onClick={() => setActiveTab("tasks")}
               rightIcon={<ArrowRight className="w-3.5 h-3.5" />}
             >
               View in Tasks
@@ -502,7 +541,11 @@ export const GoalDetailPage: React.FC = () => {
                   : `${progressInfo.completedMilestones}/${progressInfo.totalMilestones} milestones`}
               </span>
             </div>
-            <Progress value={combinedProgressPercent} size="sm" variant="gradient" />
+            <Progress
+              value={combinedProgressPercent}
+              size="sm"
+              variant="gradient"
+            />
           </div>
 
           {/* Target Deadline */}
@@ -514,15 +557,13 @@ export const GoalDetailPage: React.FC = () => {
             <div className="text-sm font-semibold text-white font-mono">
               {goal.deadline
                 ? new Date(goal.deadline).toLocaleDateString(undefined, {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
                   })
-                : 'No deadline set'}
+                : "No deadline set"}
             </div>
-            <div className="text-xs text-slate-400">
-              {deadlineRisk.text}
-            </div>
+            <div className="text-xs text-slate-400">{deadlineRisk.text}</div>
           </div>
 
           {/* Deadline Risk Tier */}
@@ -534,22 +575,24 @@ export const GoalDetailPage: React.FC = () => {
             <div className="flex items-center space-x-2">
               <span
                 className={`inline-block px-2.5 py-0.5 rounded text-xs font-mono font-semibold border ${
-                  deadlineRisk.level === 'critical'
-                    ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
-                    : deadlineRisk.level === 'high'
-                    ? 'bg-orange-500/10 text-orange-400 border-orange-500/30'
-                    : deadlineRisk.level === 'medium'
-                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                    : deadlineRisk.level === 'none'
-                    ? 'bg-slate-800 text-slate-400 border-slate-700'
-                    : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                  deadlineRisk.level === "critical"
+                    ? "bg-rose-500/10 text-rose-400 border-rose-500/30"
+                    : deadlineRisk.level === "high"
+                      ? "bg-orange-500/10 text-orange-400 border-orange-500/30"
+                      : deadlineRisk.level === "medium"
+                        ? "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                        : deadlineRisk.level === "none"
+                          ? "bg-slate-800 text-slate-400 border-slate-700"
+                          : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
                 }`}
               >
                 {deadlineRisk.label}
               </span>
             </div>
             <div className="text-[11px] text-slate-500">
-              {evaluation?.is_moving_forward ? 'Actively moving forward' : 'Pace under analysis'}
+              {evaluation?.is_moving_forward
+                ? "Actively moving forward"
+                : "Pace under analysis"}
             </div>
           </div>
 
@@ -561,22 +604,27 @@ export const GoalDetailPage: React.FC = () => {
             </div>
             <div className="flex items-baseline space-x-2">
               <span className="text-2xl font-bold font-mono text-white">
-                {planVersions.length > 0 ? planVersions.length : activePlan ? 1 : 0}
+                {planVersions.length > 0
+                  ? planVersions.length
+                  : activePlan
+                    ? 1
+                    : 0}
               </span>
               <span className="text-xs text-slate-400">
-                {activePlan ? `(Active v${activePlan.version})` : 'Unplanned'}
+                {activePlan ? `(Active v${activePlan.version})` : "Unplanned"}
               </span>
             </div>
             <div className="flex items-center space-x-3 pt-0.5">
               <button
-                onClick={() => setActiveTab('versions')}
+                onClick={() => setActiveTab("versions")}
                 className="text-xs text-slate-400 hover:text-white font-mono"
               >
                 History &rarr;
               </button>
-              {(planVersions.length > 1 || (activePlan && activePlan.version > 1)) && (
+              {(planVersions.length > 1 ||
+                (activePlan && activePlan.version > 1)) && (
                 <button
-                  onClick={() => setActiveTab('replanning')}
+                  onClick={() => setActiveTab("replanning")}
                   className="text-[11px] text-emerald-400 hover:text-emerald-300 font-mono font-semibold flex items-center space-x-1"
                 >
                   <Sparkles className="w-3 h-3" />
@@ -592,23 +640,54 @@ export const GoalDetailPage: React.FC = () => {
       {/* 3. WORKSPACE NAVIGATION TABS                                              */}
       {/* ========================================================================= */}
       <div className="border-b border-slate-800 overflow-x-auto scrollbar-none">
-        <nav className="flex space-x-2 sm:space-x-4 min-w-max pb-px" aria-label="Goal Workspace Tabs">
+        <nav
+          className="flex space-x-2 sm:space-x-4 min-w-max pb-px"
+          aria-label="Goal Workspace Tabs"
+        >
           {[
-            { id: 'overview', label: 'Overview & Milestones', icon: <Layers className="w-4 h-4" /> },
-            { id: 'tasks', label: `Tasks (${tasks.length})`, icon: <ListChecks className="w-4 h-4" /> },
-            { id: 'dependencies', label: 'Dependencies DAG', icon: <Network className="w-4 h-4" /> },
-            { id: 'timeline', label: 'Timeline & Schedule', icon: <Calendar className="w-4 h-4" /> },
-            { id: 'risk', label: 'Risk & Diagnosis', icon: <ShieldAlert className="w-4 h-4" /> },
-            { id: 'versions', label: `Plan Versions (${planVersions.length})`, icon: <History className="w-4 h-4" /> },
-            { id: 'replanning', label: 'Replanning Diff', icon: <GitBranch className="w-4 h-4" /> },
+            {
+              id: "overview",
+              label: "Overview & Milestones",
+              icon: <Layers className="w-4 h-4" />,
+            },
+            {
+              id: "tasks",
+              label: `Tasks (${tasks.length})`,
+              icon: <ListChecks className="w-4 h-4" />,
+            },
+            {
+              id: "dependencies",
+              label: "Dependencies DAG",
+              icon: <Network className="w-4 h-4" />,
+            },
+            {
+              id: "timeline",
+              label: "Timeline & Schedule",
+              icon: <Calendar className="w-4 h-4" />,
+            },
+            {
+              id: "risk",
+              label: "Risk & Diagnosis",
+              icon: <ShieldAlert className="w-4 h-4" />,
+            },
+            {
+              id: "versions",
+              label: `Plan Versions (${planVersions.length})`,
+              icon: <History className="w-4 h-4" />,
+            },
+            {
+              id: "replanning",
+              label: "Replanning Diff",
+              icon: <GitBranch className="w-4 h-4" />,
+            },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as TabType)}
               className={`flex items-center space-x-2 py-3 px-3.5 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
                 activeTab === tab.id
-                  ? 'border-emerald-400 text-emerald-400 bg-slate-900/40 rounded-t-lg'
-                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                  ? "border-emerald-400 text-emerald-400 bg-slate-900/40 rounded-t-lg"
+                  : "border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-700"
               }`}
             >
               {tab.icon}
@@ -621,7 +700,7 @@ export const GoalDetailPage: React.FC = () => {
       {/* ========================================================================= */}
       {/* TAB 1: OVERVIEW & MILESTONES                                              */}
       {/* ========================================================================= */}
-      {activeTab === 'overview' && (
+      {activeTab === "overview" && (
         <div className="space-y-6 animate-in fade-in duration-200">
           {/* Description Card */}
           {goal.description && (
@@ -643,7 +722,10 @@ export const GoalDetailPage: React.FC = () => {
               <div>
                 <h3 className="text-lg font-bold text-white flex items-center space-x-2">
                   <Layers className="w-5 h-5 text-emerald-400" />
-                  <span>Progressive Phase Milestones ({goal.milestones?.length || 0})</span>
+                  <span>
+                    Progressive Phase Milestones ({goal.milestones?.length || 0}
+                    )
+                  </span>
                 </h3>
                 <p className="text-xs text-slate-400">
                   Sequential target checkpoints required to achieve this goal
@@ -651,13 +733,15 @@ export const GoalDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {(!goal.milestones || goal.milestones.length === 0) ? (
+            {!goal.milestones || goal.milestones.length === 0 ? (
               <EmptyState
                 icon={Layers}
                 title="No Milestones Registered Yet"
                 description="Decompose this goal to automatically synthesize progressive phase milestones and executable tasks."
                 action={{
-                  label: decomposeMutation.isPending ? 'Decomposing...' : 'Decompose Goal via Agent',
+                  label: decomposeMutation.isPending
+                    ? "Decomposing..."
+                    : "Decompose Goal via Agent",
                   icon: Sparkles,
                   onClick: () => decomposeMutation.mutate(),
                 }}
@@ -680,8 +764,16 @@ export const GoalDetailPage: React.FC = () => {
                           <h4 className="text-sm font-semibold text-white">
                             {milestone.title}
                           </h4>
-                          <Badge variant={milestone.status === 'completed' ? 'completed' : milestone.status === 'in_progress' ? 'active' : 'default'}>
-                            {milestone.status.replace('_', ' ')}
+                          <Badge
+                            variant={
+                              milestone.status === "completed"
+                                ? "completed"
+                                : milestone.status === "in_progress"
+                                  ? "active"
+                                  : "default"
+                            }
+                          >
+                            {milestone.status.replace("_", " ")}
                           </Badge>
                         </div>
                         {milestone.description && (
@@ -692,7 +784,12 @@ export const GoalDetailPage: React.FC = () => {
                         {milestone.deadline && (
                           <div className="text-[11px] font-mono text-slate-500 flex items-center space-x-1 pt-1">
                             <Calendar className="w-3 h-3" />
-                            <span>Target: {new Date(milestone.deadline).toLocaleDateString()}</span>
+                            <span>
+                              Target:{" "}
+                              {new Date(
+                                milestone.deadline,
+                              ).toLocaleDateString()}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -709,8 +806,10 @@ export const GoalDetailPage: React.FC = () => {
                 <h4 className="text-xs uppercase font-mono tracking-wider text-slate-400">
                   Enforced Constraints ({goal.constraints?.length || 0})
                 </h4>
-                {(!goal.constraints || goal.constraints.length === 0) ? (
-                  <p className="text-xs text-slate-500 italic">No specific constraints attached</p>
+                {!goal.constraints || goal.constraints.length === 0 ? (
+                  <p className="text-xs text-slate-500 italic">
+                    No specific constraints attached
+                  </p>
                 ) : (
                   <div className="space-y-2">
                     {goal.constraints.map((c) => (
@@ -718,8 +817,12 @@ export const GoalDetailPage: React.FC = () => {
                         key={c.id}
                         className="text-xs p-2.5 rounded-lg bg-slate-950 border border-slate-800 flex justify-between items-center"
                       >
-                        <span className="font-semibold text-slate-300 capitalize">{c.type}:</span>
-                        <span className="font-mono text-slate-400">{c.value}</span>
+                        <span className="font-semibold text-slate-300 capitalize">
+                          {c.type}:
+                        </span>
+                        <span className="font-mono text-slate-400">
+                          {c.value}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -732,8 +835,11 @@ export const GoalDetailPage: React.FC = () => {
                 <h4 className="text-xs uppercase font-mono tracking-wider text-slate-400">
                   Success Criteria ({goal.success_criteria?.length || 0})
                 </h4>
-                {(!goal.success_criteria || goal.success_criteria.length === 0) ? (
-                  <p className="text-xs text-slate-500 italic">No explicit criteria provided</p>
+                {!goal.success_criteria ||
+                goal.success_criteria.length === 0 ? (
+                  <p className="text-xs text-slate-500 italic">
+                    No explicit criteria provided
+                  </p>
                 ) : (
                   <ul className="space-y-2 text-xs text-slate-300">
                     {goal.success_criteria.map((crit, idx) => (
@@ -753,7 +859,7 @@ export const GoalDetailPage: React.FC = () => {
       {/* ========================================================================= */}
       {/* TAB 2: TASKS & EXECUTION                                                  */}
       {/* ========================================================================= */}
-      {activeTab === 'tasks' && (
+      {activeTab === "tasks" && (
         <div className="space-y-4 animate-in fade-in duration-200">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -762,7 +868,8 @@ export const GoalDetailPage: React.FC = () => {
                 <span>Decomposed Tasks ({tasks.length})</span>
               </h3>
               <p className="text-xs text-slate-400">
-                Actionable units of work. Complete or update tasks to advance plan execution.
+                Actionable units of work. Complete or update tasks to advance
+                plan execution.
               </p>
             </div>
 
@@ -782,7 +889,10 @@ export const GoalDetailPage: React.FC = () => {
           {isLoadingTasks ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="p-4 rounded-xl border border-slate-800 bg-slate-900/40 space-y-2">
+                <div
+                  key={i}
+                  className="p-4 rounded-xl border border-slate-800 bg-slate-900/40 space-y-2"
+                >
                   <div className="flex justify-between">
                     <Skeleton className="h-5 w-48" />
                     <Skeleton className="h-5 w-20" />
@@ -797,7 +907,9 @@ export const GoalDetailPage: React.FC = () => {
               title="No Tasks Generated Yet"
               description="Run decomposition to break this goal into concrete actionable tasks with estimated effort."
               action={{
-                label: decomposeMutation.isPending ? 'Decomposing...' : 'Decompose Goal Now',
+                label: decomposeMutation.isPending
+                  ? "Decomposing..."
+                  : "Decompose Goal Now",
                 icon: Sparkles,
                 onClick: () => decomposeMutation.mutate(),
               }}
@@ -805,13 +917,15 @@ export const GoalDetailPage: React.FC = () => {
           ) : (
             <div className="rounded-2xl border border-slate-800 bg-slate-900/50 divide-y divide-slate-800/80 overflow-hidden shadow-lg">
               {tasks.map((task) => {
-                const isCompleted = task.status === 'COMPLETED';
+                const isCompleted = task.status === "COMPLETED";
 
                 return (
                   <div
                     key={task.id}
                     className={`p-4 transition-colors flex items-start space-x-4 ${
-                      isCompleted ? 'bg-slate-950/40 opacity-75' : 'hover:bg-slate-900/80'
+                      isCompleted
+                        ? "bg-slate-950/40 opacity-75"
+                        : "hover:bg-slate-900/80"
                     }`}
                   >
                     {/* Task Completion Button / Checkbox */}
@@ -821,10 +935,12 @@ export const GoalDetailPage: React.FC = () => {
                       onClick={() => completeTaskMutation.mutate(task.id)}
                       className={`mt-1 p-1 rounded-md border transition-all ${
                         isCompleted
-                          ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400 cursor-default'
-                          : 'border-slate-700 hover:border-emerald-500 text-slate-400 hover:text-emerald-400'
+                          ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400 cursor-default"
+                          : "border-slate-700 hover:border-emerald-500 text-slate-400 hover:text-emerald-400"
                       }`}
-                      title={isCompleted ? 'Task completed' : 'Mark task complete'}
+                      title={
+                        isCompleted ? "Task completed" : "Mark task complete"
+                      }
                       aria-label={`Mark task ${task.title} complete`}
                     >
                       <CheckCircle2 className="w-5 h-5" />
@@ -835,7 +951,9 @@ export const GoalDetailPage: React.FC = () => {
                       <div className="flex flex-wrap items-baseline justify-between gap-2">
                         <h4
                           className={`text-sm font-semibold ${
-                            isCompleted ? 'line-through text-slate-400' : 'text-white'
+                            isCompleted
+                              ? "line-through text-slate-400"
+                              : "text-white"
                           }`}
                         >
                           {task.title}
@@ -843,7 +961,15 @@ export const GoalDetailPage: React.FC = () => {
 
                         <div className="flex items-center space-x-1.5 shrink-0">
                           <Badge variant={task.priority}>{task.priority}</Badge>
-                          <Badge variant={isCompleted ? 'completed' : task.status === 'IN_PROGRESS' ? 'active' : 'default'}>
+                          <Badge
+                            variant={
+                              isCompleted
+                                ? "completed"
+                                : task.status === "IN_PROGRESS"
+                                  ? "active"
+                                  : "default"
+                            }
+                          >
                             {task.status}
                           </Badge>
                         </div>
@@ -863,7 +989,9 @@ export const GoalDetailPage: React.FC = () => {
                         {task.due_at && (
                           <span className="flex items-center space-x-1">
                             <Calendar className="w-3 h-3" />
-                            <span>Due: {new Date(task.due_at).toLocaleDateString()}</span>
+                            <span>
+                              Due: {new Date(task.due_at).toLocaleDateString()}
+                            </span>
                           </span>
                         )}
                         {task.completed_at && (
@@ -894,7 +1022,7 @@ export const GoalDetailPage: React.FC = () => {
       {/* ========================================================================= */}
       {/* TAB 3: DEPENDENCIES & DAG                                                 */}
       {/* ========================================================================= */}
-      {activeTab === 'dependencies' && (
+      {activeTab === "dependencies" && (
         <div className="space-y-6 animate-in fade-in duration-200">
           <div className="flex items-center justify-between">
             <div>
@@ -909,7 +1037,10 @@ export const GoalDetailPage: React.FC = () => {
 
             {dependencyGraph && (
               <div className="text-xs font-mono text-slate-400 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
-                Critical Path Duration: <span className="text-emerald-400 font-bold">{dependencyGraph.critical_path_duration_minutes}m</span>
+                Critical Path Duration:{" "}
+                <span className="text-emerald-400 font-bold">
+                  {dependencyGraph.critical_path_duration_minutes}m
+                </span>
               </div>
             )}
           </div>
@@ -923,64 +1054,91 @@ export const GoalDetailPage: React.FC = () => {
             <Card className="text-center py-12 border-dashed border-slate-800">
               <CardContent className="space-y-3">
                 <Network className="w-8 h-8 text-slate-500 mx-auto" />
-                <p className="text-sm font-medium text-slate-300">No dependency graph available</p>
+                <p className="text-sm font-medium text-slate-300">
+                  No dependency graph available
+                </p>
                 <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                  Run decomposition to produce the verified dependency graph and topological execution order.
+                  Run decomposition to produce the verified dependency graph and
+                  topological execution order.
                 </p>
               </CardContent>
             </Card>
           ) : (
             <div className="space-y-6">
               {/* Critical Path Sequence Banner */}
-              {dependencyGraph.critical_path && dependencyGraph.critical_path.length > 0 && (
-                <div className="p-4 rounded-xl bg-slate-900 border border-emerald-500/30 space-y-2">
-                  <div className="text-xs font-mono font-semibold uppercase tracking-wider text-emerald-400 flex items-center space-x-2">
-                    <GitBranch className="w-4 h-4" />
-                    <span>Identified Critical Path ({dependencyGraph.critical_path.length} tasks)</span>
+              {dependencyGraph.critical_path &&
+                dependencyGraph.critical_path.length > 0 && (
+                  <div className="p-4 rounded-xl bg-slate-900 border border-emerald-500/30 space-y-2">
+                    <div className="text-xs font-mono font-semibold uppercase tracking-wider text-emerald-400 flex items-center space-x-2">
+                      <GitBranch className="w-4 h-4" />
+                      <span>
+                        Identified Critical Path (
+                        {dependencyGraph.critical_path.length} tasks)
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      {dependencyGraph.critical_path.map((taskId, index) => {
+                        const taskObj = dependencyGraph.nodes.find(
+                          (n) => n.id === taskId,
+                        );
+                        return (
+                          <React.Fragment key={taskId}>
+                            <span className="px-2.5 py-1 rounded-lg bg-slate-950 border border-emerald-500/40 text-xs font-mono text-emerald-300">
+                              {taskObj ? taskObj.title : taskId.substring(0, 8)}
+                            </span>
+                            {index <
+                              dependencyGraph.critical_path.length - 1 && (
+                              <span className="text-slate-500 font-bold">
+                                &rarr;
+                              </span>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2 pt-1">
-                    {dependencyGraph.critical_path.map((taskId, index) => {
-                      const taskObj = dependencyGraph.nodes.find((n) => n.id === taskId);
-                      return (
-                        <React.Fragment key={taskId}>
-                          <span className="px-2.5 py-1 rounded-lg bg-slate-950 border border-emerald-500/40 text-xs font-mono text-emerald-300">
-                            {taskObj ? taskObj.title : taskId.substring(0, 8)}
-                          </span>
-                          {index < dependencyGraph.critical_path.length - 1 && (
-                            <span className="text-slate-500 font-bold">&rarr;</span>
-                          )}
-                        </React.Fragment>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+                )}
 
               {/* Dependency Links Table */}
               <div className="space-y-3">
                 <h4 className="text-xs uppercase font-mono tracking-wider text-slate-400">
-                  Prerequisite Dependency Relationships ({dependencyGraph.edges.length})
+                  Prerequisite Dependency Relationships (
+                  {dependencyGraph.edges.length})
                 </h4>
 
                 {dependencyGraph.edges.length === 0 ? (
                   <p className="text-xs text-slate-500 italic p-4 rounded-xl bg-slate-900/40 border border-slate-800">
-                    All tasks are currently unconstrained or can execute in parallel.
+                    All tasks are currently unconstrained or can execute in
+                    parallel.
                   </p>
                 ) : (
                   <div className="rounded-xl border border-slate-800 bg-slate-900/60 divide-y divide-slate-800">
                     {dependencyGraph.edges.map((edge) => {
-                      const targetTask = dependencyGraph.nodes.find((n) => n.id === edge.task_id);
-                      const prereqTask = dependencyGraph.nodes.find((n) => n.id === edge.depends_on_task_id);
+                      const targetTask = dependencyGraph.nodes.find(
+                        (n) => n.id === edge.task_id,
+                      );
+                      const prereqTask = dependencyGraph.nodes.find(
+                        (n) => n.id === edge.depends_on_task_id,
+                      );
 
                       return (
-                        <div key={edge.id} className="p-3 text-xs flex items-center justify-between">
+                        <div
+                          key={edge.id}
+                          className="p-3 text-xs flex items-center justify-between"
+                        >
                           <div className="flex items-center space-x-2">
                             <span className="font-semibold text-white">
-                              {targetTask ? targetTask.title : edge.task_id.substring(0, 8)}
+                              {targetTask
+                                ? targetTask.title
+                                : edge.task_id.substring(0, 8)}
                             </span>
-                            <span className="text-slate-500 font-mono">cannot start until</span>
+                            <span className="text-slate-500 font-mono">
+                              cannot start until
+                            </span>
                             <span className="font-semibold text-emerald-400">
-                              {prereqTask ? prereqTask.title : edge.depends_on_task_id.substring(0, 8)}
+                              {prereqTask
+                                ? prereqTask.title
+                                : edge.depends_on_task_id.substring(0, 8)}
                             </span>
                           </div>
                           <span className="font-mono text-[10px] uppercase bg-slate-800 px-2 py-0.5 rounded text-slate-300">
@@ -1000,7 +1158,7 @@ export const GoalDetailPage: React.FC = () => {
       {/* ========================================================================= */}
       {/* TAB 4: TIMELINE & SCHEDULE                                                */}
       {/* ========================================================================= */}
-      {activeTab === 'timeline' && (
+      {activeTab === "timeline" && (
         <div className="space-y-6 animate-in fade-in duration-200">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -1009,7 +1167,8 @@ export const GoalDetailPage: React.FC = () => {
                 <span>Deterministic Execution Timeline</span>
               </h3>
               <p className="text-xs text-slate-400">
-                Scheduled execution plan allocating tasks across available user capacity
+                Scheduled execution plan allocating tasks across available user
+                capacity
               </p>
             </div>
 
@@ -1035,7 +1194,9 @@ export const GoalDetailPage: React.FC = () => {
               title="No Active Schedule Generated"
               description="Click generate to build an optimal schedule respecting working hours, dependencies, and deadlines."
               action={{
-                label: generatePlanMutation.isPending ? 'Generating Schedule...' : 'Generate Plan Schedule',
+                label: generatePlanMutation.isPending
+                  ? "Generating Schedule..."
+                  : "Generate Plan Schedule",
                 icon: Sparkles,
                 onClick: () => generatePlanMutation.mutate(),
               }}
@@ -1045,21 +1206,32 @@ export const GoalDetailPage: React.FC = () => {
               {/* Schedule Summary Header */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
-                  <div className="text-xs font-mono text-slate-400 uppercase">Feasibility</div>
-                  <div className={`text-base font-bold ${activePlan.is_feasible ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {activePlan.is_feasible ? 'Feasible (Completes On Time)' : 'Infeasible (Exceeds Deadline)'}
+                  <div className="text-xs font-mono text-slate-400 uppercase">
+                    Feasibility
+                  </div>
+                  <div
+                    className={`text-base font-bold ${activePlan.is_feasible ? "text-emerald-400" : "text-rose-400"}`}
+                  >
+                    {activePlan.is_feasible
+                      ? "Feasible (Completes On Time)"
+                      : "Infeasible (Exceeds Deadline)"}
                   </div>
                 </div>
 
                 <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
-                  <div className="text-xs font-mono text-slate-400 uppercase">Total Scheduled Effort</div>
+                  <div className="text-xs font-mono text-slate-400 uppercase">
+                    Total Scheduled Effort
+                  </div>
                   <div className="text-base font-bold text-white font-mono">
-                    {Math.round(activePlan.total_duration_minutes / 60)} hrs ({activePlan.total_duration_minutes} mins)
+                    {Math.round(activePlan.total_duration_minutes / 60)} hrs (
+                    {activePlan.total_duration_minutes} mins)
                   </div>
                 </div>
 
                 <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
-                  <div className="text-xs font-mono text-slate-400 uppercase">Plan Version</div>
+                  <div className="text-xs font-mono text-slate-400 uppercase">
+                    Plan Version
+                  </div>
                   <div className="text-base font-bold text-purple-400 font-mono">
                     v{activePlan.version} ({activePlan.status})
                   </div>
@@ -1074,10 +1246,14 @@ export const GoalDetailPage: React.FC = () => {
 
                 <div className="rounded-2xl border border-slate-800 bg-slate-900/60 divide-y divide-slate-800/80 overflow-hidden shadow-lg">
                   {activePlan.items.map((item, idx) => (
-                    <div key={item.id || idx} className="p-4 flex items-center justify-between text-xs hover:bg-slate-900/80 transition-colors">
+                    <div
+                      key={item.id || idx}
+                      className="p-4 flex items-center justify-between text-xs hover:bg-slate-900/80 transition-colors"
+                    >
                       <div className="space-y-1">
                         <div className="font-semibold text-white text-sm">
-                          {item.task_title || `Task ${item.task_id.substring(0, 8)}`}
+                          {item.task_title ||
+                            `Task ${item.task_id.substring(0, 8)}`}
                         </div>
                         {item.rationale && (
                           <p className="text-slate-400 text-xs italic">
@@ -1088,15 +1264,22 @@ export const GoalDetailPage: React.FC = () => {
 
                       <div className="text-right font-mono text-slate-300 space-y-0.5">
                         <div className="text-emerald-400 font-semibold">
-                          {new Date(item.scheduled_start).toLocaleString(undefined, {
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
+                          {new Date(item.scheduled_start).toLocaleString(
+                            undefined,
+                            {
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            },
+                          )}
                         </div>
                         <div className="text-slate-500 text-[11px]">
-                          to {new Date(item.scheduled_end).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
+                          to{" "}
+                          {new Date(item.scheduled_end).toLocaleTimeString(
+                            undefined,
+                            { hour: "2-digit", minute: "2-digit" },
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1111,7 +1294,7 @@ export const GoalDetailPage: React.FC = () => {
       {/* ========================================================================= */}
       {/* TAB 5: RISK & DIAGNOSIS                                                   */}
       {/* ========================================================================= */}
-      {activeTab === 'risk' && (
+      {activeTab === "risk" && (
         <div className="space-y-6 animate-in fade-in duration-200">
           <div className="flex items-center justify-between">
             <div>
@@ -1120,7 +1303,8 @@ export const GoalDetailPage: React.FC = () => {
                 <span>Goal Risk &amp; Diagnostic Engine</span>
               </h3>
               <p className="text-xs text-slate-400">
-                Multi-dimensional evaluation of momentum, consistency, bottlenecks, and execution risk
+                Multi-dimensional evaluation of momentum, consistency,
+                bottlenecks, and execution risk
               </p>
             </div>
 
@@ -1144,9 +1328,12 @@ export const GoalDetailPage: React.FC = () => {
             <Card className="text-center py-12 border-dashed border-slate-800">
               <CardContent className="space-y-3">
                 <ShieldCheck className="w-8 h-8 text-slate-500 mx-auto" />
-                <h4 className="text-sm font-semibold text-white">Diagnostic evaluation available</h4>
+                <h4 className="text-sm font-semibold text-white">
+                  Diagnostic evaluation available
+                </h4>
                 <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                  Evaluate whether the current plan is actively progressing toward completion and detect bottlenecks.
+                  Evaluate whether the current plan is actively progressing
+                  toward completion and detect bottlenecks.
                 </p>
                 <Button
                   size="sm"
@@ -1163,30 +1350,43 @@ export const GoalDetailPage: React.FC = () => {
               {/* Primary Diagnostic Banner */}
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                 <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
-                  <div className="text-xs font-mono text-slate-400 uppercase">Forward Momentum</div>
-                  <div className={`text-lg font-bold ${evaluation.is_moving_forward ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {evaluation.is_moving_forward ? 'Moving Forward' : 'Stalled / Churning'}
+                  <div className="text-xs font-mono text-slate-400 uppercase">
+                    Forward Momentum
+                  </div>
+                  <div
+                    className={`text-lg font-bold ${evaluation.is_moving_forward ? "text-emerald-400" : "text-rose-400"}`}
+                  >
+                    {evaluation.is_moving_forward
+                      ? "Moving Forward"
+                      : "Stalled / Churning"}
                   </div>
                 </div>
 
                 <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
-                  <div className="text-xs font-mono text-slate-400 uppercase">Evaluated Risk</div>
+                  <div className="text-xs font-mono text-slate-400 uppercase">
+                    Evaluated Risk
+                  </div>
                   <div className="text-lg font-bold text-amber-400 uppercase font-mono">
                     {evaluation.deadline_risk}
                   </div>
                 </div>
 
                 <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
-                  <div className="text-xs font-mono text-slate-400 uppercase">Consistency Score</div>
+                  <div className="text-xs font-mono text-slate-400 uppercase">
+                    Consistency Score
+                  </div>
                   <div className="text-lg font-bold text-teal-400 font-mono">
                     {Math.round(evaluation.consistency_score * 100)}%
                   </div>
                 </div>
 
                 <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
-                  <div className="text-xs font-mono text-slate-400 uppercase">Remaining Workload</div>
+                  <div className="text-xs font-mono text-slate-400 uppercase">
+                    Remaining Workload
+                  </div>
                   <div className="text-lg font-bold text-white font-mono">
-                    {Math.round(evaluation.remaining_workload_minutes / 60)}h ({evaluation.remaining_workload_minutes}m)
+                    {Math.round(evaluation.remaining_workload_minutes / 60)}h (
+                    {evaluation.remaining_workload_minutes}m)
                   </div>
                 </div>
               </div>
@@ -1194,12 +1394,15 @@ export const GoalDetailPage: React.FC = () => {
               {/* Detected Bottlenecks & Weaknesses */}
               <div className="space-y-3">
                 <h4 className="text-xs uppercase font-mono tracking-wider text-slate-400">
-                  Detected Execution Weaknesses ({evaluation.weaknesses?.length || 0})
+                  Detected Execution Weaknesses (
+                  {evaluation.weaknesses?.length || 0})
                 </h4>
 
-                {(!evaluation.weaknesses || evaluation.weaknesses.length === 0) ? (
+                {!evaluation.weaknesses ||
+                evaluation.weaknesses.length === 0 ? (
                   <p className="text-xs text-emerald-400/90 p-4 rounded-xl bg-emerald-950/20 border border-emerald-800/40">
-                    &bull; No execution bottlenecks or critical churn patterns detected for this goal.
+                    &bull; No execution bottlenecks or critical churn patterns
+                    detected for this goal.
                   </p>
                 ) : (
                   <div className="space-y-2">
@@ -1235,7 +1438,7 @@ export const GoalDetailPage: React.FC = () => {
       {/* ========================================================================= */}
       {/* TAB 6: PLAN REVISIONS & HISTORY                                           */}
       {/* ========================================================================= */}
-      {activeTab === 'versions' && (
+      {activeTab === "versions" && (
         <div className="space-y-6 animate-in fade-in duration-200">
           <div>
             <h3 className="text-lg font-bold text-white flex items-center space-x-2">
@@ -1253,9 +1456,12 @@ export const GoalDetailPage: React.FC = () => {
             <Card className="text-center py-12 border-dashed border-slate-800">
               <CardContent className="space-y-3">
                 <History className="w-8 h-8 text-slate-500 mx-auto" />
-                <p className="text-sm font-medium text-slate-300">No historical plans found</p>
+                <p className="text-sm font-medium text-slate-300">
+                  No historical plans found
+                </p>
                 <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                  When new schedules are generated or autonomous replanning occurs, versioned revisions are archived here.
+                  When new schedules are generated or autonomous replanning
+                  occurs, versioned revisions are archived here.
                 </p>
               </CardContent>
             </Card>
@@ -1271,20 +1477,23 @@ export const GoalDetailPage: React.FC = () => {
                       <span className="font-mono font-bold text-white text-sm">
                         Version {v.version}
                       </span>
-                      <Badge variant={v.status === 'ACTIVE' ? 'active' : 'default'}>
+                      <Badge
+                        variant={v.status === "ACTIVE" ? "active" : "default"}
+                      >
                         {v.status}
                       </Badge>
-                      <Badge variant={v.is_feasible ? 'success' : 'danger'}>
-                        {v.is_feasible ? 'FEASIBLE' : 'INFEASIBLE'}
+                      <Badge variant={v.is_feasible ? "success" : "danger"}>
+                        {v.is_feasible ? "FEASIBLE" : "INFEASIBLE"}
                       </Badge>
                     </div>
 
                     <div className="text-xs text-slate-400">
-                      {v.reason || 'Routine schedule generation'}
+                      {v.reason || "Routine schedule generation"}
                     </div>
 
                     <div className="text-[11px] font-mono text-slate-500">
-                      Generated: {new Date(v.generated_at).toLocaleString()} &bull; {v.task_count} tasks ({v.total_duration_minutes}m)
+                      Generated: {new Date(v.generated_at).toLocaleString()}{" "}
+                      &bull; {v.task_count} tasks ({v.total_duration_minutes}m)
                     </div>
                   </div>
 
@@ -1294,7 +1503,7 @@ export const GoalDetailPage: React.FC = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          setActiveTab('replanning');
+                          setActiveTab("replanning");
                         }}
                       >
                         View Diff
@@ -1318,11 +1527,11 @@ export const GoalDetailPage: React.FC = () => {
       {/* ========================================================================= */}
       {/* TAB 7: REPLANNING DIFF VISUALIZATION                                      */}
       {/* ========================================================================= */}
-      {activeTab === 'replanning' && (
+      {activeTab === "replanning" && (
         <ReplanningDiffViewer
           goalId={goalId}
           goalTitle={goal.title}
-          onNavigateToTask={() => setActiveTab('tasks')}
+          onNavigateToTask={() => setActiveTab("tasks")}
         />
       )}
 
@@ -1338,7 +1547,11 @@ export const GoalDetailPage: React.FC = () => {
       >
         <form onSubmit={handleUpdateTaskSubmit} className="space-y-4 pt-1">
           {taskError && (
-            <Alert variant="error" title="Update Error" onDismiss={() => setTaskError(null)}>
+            <Alert
+              variant="error"
+              title="Update Error"
+              onDismiss={() => setTaskError(null)}
+            >
               {taskError}
             </Alert>
           )}
@@ -1378,7 +1591,9 @@ export const GoalDetailPage: React.FC = () => {
               <select
                 id="editTaskPriority"
                 value={taskPriority}
-                onChange={(e) => setTaskPriority(e.target.value as GoalPriority)}
+                onChange={(e) =>
+                  setTaskPriority(e.target.value as GoalPriority)
+                }
                 className="w-full bg-slate-900 border border-slate-800 text-slate-100 rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
                 <option value="low">Low</option>
@@ -1465,22 +1680,46 @@ export const GoalDetailPage: React.FC = () => {
         ) : (
           <div className="space-y-4 pt-1">
             <div className="flex items-center justify-between text-xs font-mono p-3 bg-slate-950 rounded-lg border border-slate-800">
-              <span>Risk: <strong className="text-amber-400">{historicalPlanDetail.risk_level}</strong></span>
-              <span>Total Duration: <strong>{historicalPlanDetail.total_duration_minutes}m</strong></span>
-              <span>Feasible: <strong className={historicalPlanDetail.is_feasible ? 'text-emerald-400' : 'text-rose-400'}>
-                {historicalPlanDetail.is_feasible ? 'YES' : 'NO'}
-              </strong></span>
+              <span>
+                Risk:{" "}
+                <strong className="text-amber-400">
+                  {historicalPlanDetail.risk_level}
+                </strong>
+              </span>
+              <span>
+                Total Duration:{" "}
+                <strong>{historicalPlanDetail.total_duration_minutes}m</strong>
+              </span>
+              <span>
+                Feasible:{" "}
+                <strong
+                  className={
+                    historicalPlanDetail.is_feasible
+                      ? "text-emerald-400"
+                      : "text-rose-400"
+                  }
+                >
+                  {historicalPlanDetail.is_feasible ? "YES" : "NO"}
+                </strong>
+              </span>
             </div>
 
             <div className="max-h-80 overflow-y-auto space-y-2 pr-1">
               {historicalPlanDetail.items.map((item, idx) => (
-                <div key={idx} className="p-3 bg-slate-950/70 border border-slate-800 rounded-lg text-xs space-y-1">
+                <div
+                  key={idx}
+                  className="p-3 bg-slate-950/70 border border-slate-800 rounded-lg text-xs space-y-1"
+                >
                   <div className="font-semibold text-white">
                     {item.task_title || `Task ${item.task_id.substring(0, 8)}`}
                   </div>
                   <div className="text-[11px] font-mono text-slate-400 flex justify-between">
-                    <span>Start: {new Date(item.scheduled_start).toLocaleString()}</span>
-                    <span>End: {new Date(item.scheduled_end).toLocaleString()}</span>
+                    <span>
+                      Start: {new Date(item.scheduled_start).toLocaleString()}
+                    </span>
+                    <span>
+                      End: {new Date(item.scheduled_end).toLocaleString()}
+                    </span>
                   </div>
                 </div>
               ))}

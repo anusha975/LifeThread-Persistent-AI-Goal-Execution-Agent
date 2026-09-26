@@ -1,10 +1,10 @@
-import React from 'react';
-import { AlertTriangle, AlertCircle, Info, LucideIcon } from 'lucide-react';
-import { Modal } from './Modal';
-import { Button } from './Button';
-import { cn } from '../../utils/cn';
+import React from "react";
+import { AlertTriangle, AlertCircle, Info, LucideIcon } from "lucide-react";
+import { Modal } from "./Modal";
+import { Button } from "./Button";
+import { cn } from "../../utils/cn";
 
-export type ConfirmVariant = 'danger' | 'warning' | 'primary';
+export type ConfirmVariant = "danger" | "warning" | "primary";
 
 export interface ConfirmDialogProps {
   isOpen: boolean;
@@ -30,41 +30,36 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   message,
   confirmLabel,
   confirmText,
-  cancelLabel = 'Cancel',
+  cancelLabel = "Cancel",
   isLoading = false,
-  variant = 'danger',
+  variant = "danger",
   icon: CustomIcon,
 }) => {
-  const resolvedDesc = description || message || '';
-  const resolvedConfirmLabel = confirmLabel || confirmText || 'Confirm';
-  const isDanger = variant === 'danger';
-  const isWarning = variant === 'warning';
+  const resolvedDesc = description || message || "";
+  const resolvedConfirmLabel = confirmLabel || confirmText || "Confirm";
+  const isDanger = variant === "danger";
+  const isWarning = variant === "warning";
 
   const DefaultIcon = isDanger ? AlertTriangle : isWarning ? AlertCircle : Info;
   const Icon = CustomIcon || DefaultIcon;
 
   const iconColorClass = isDanger
-    ? 'text-rose-400 bg-rose-500/10 border-rose-500/30'
+    ? "text-rose-400 bg-rose-500/10 border-rose-500/30"
     : isWarning
-    ? 'text-amber-400 bg-amber-500/10 border-amber-500/30'
-    : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30';
+      ? "text-amber-400 bg-amber-500/10 border-amber-500/30"
+      : "text-emerald-400 bg-emerald-500/10 border-emerald-500/30";
 
-  const buttonVariant = isDanger ? 'danger' : isWarning ? 'outline' : 'primary';
+  const buttonVariant = isDanger ? "danger" : isWarning ? "outline" : "primary";
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title=""
-      maxWidth="sm"
-    >
+    <Modal isOpen={isOpen} onClose={onClose} title="" maxWidth="sm">
       <div className="text-center pt-2 pb-1 space-y-4">
         {/* Ambient Badge Icon */}
         <div className="flex justify-center">
           <div
             className={cn(
-              'w-12 h-12 rounded-2xl border flex items-center justify-center shadow-lg transition-transform',
-              iconColorClass
+              "w-12 h-12 rounded-2xl border flex items-center justify-center shadow-lg transition-transform",
+              iconColorClass,
             )}
           >
             <Icon className="w-6 h-6 stroke-[1.75]" aria-hidden="true" />

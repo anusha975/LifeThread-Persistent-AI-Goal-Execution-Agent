@@ -115,8 +115,8 @@ jobs:
 
       - name: Backend Type Validation
         run: |
-          python -m pip install mypy
-          python -m mypy backend/app/core/config.py backend/app/services/agent_trace/models.py backend/app/services/observability/models.py
+          python -m pip install -e backend/ mypy
+          PYTHONPATH=backend python -m mypy --ignore-missing-imports backend/app/core/config.py backend/app/services/agent_trace/models.py backend/app/services/observability/models.py
 
   # =========================================================================
   # STAGE 4: Unit Tests

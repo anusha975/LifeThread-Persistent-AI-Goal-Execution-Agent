@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import React, { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRight,
   CheckCircle2,
@@ -15,17 +15,17 @@ import {
   Sliders,
   Sparkles,
   Workflow,
-} from 'lucide-react';
-import { goalService } from '../../services/goalService';
-import { GoalPriority } from '../../types/goal';
-import { ReplanningDiffResponse } from '../../types/replanning';
-import { formatRelativeTime } from '../../utils/dashboardMetrics';
-import { Button } from '../ui/Button';
-import { Badge } from '../ui/Badge';
-import { Card, CardContent } from '../ui/Card';
-import { Modal } from '../ui/Modal';
-import { Skeleton } from '../ui/Skeleton';
-import { Alert } from '../ui/Alert';
+} from "lucide-react";
+import { goalService } from "../../services/goalService";
+import { GoalPriority } from "../../types/goal";
+import { ReplanningDiffResponse } from "../../types/replanning";
+import { formatRelativeTime } from "../../utils/dashboardMetrics";
+import { Button } from "../ui/Button";
+import { Badge } from "../ui/Badge";
+import { Card, CardContent } from "../ui/Card";
+import { Modal } from "../ui/Modal";
+import { Skeleton } from "../ui/Skeleton";
+import { Alert } from "../ui/Alert";
 
 interface ReplanningDiffViewerProps {
   goalId: string;
@@ -41,22 +41,30 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
   const queryClient = useQueryClient();
 
   // Version selection for arbitrary comparison
-  const [selectedVersionA, setSelectedVersionA] = useState<number | undefined>(undefined);
-  const [selectedVersionB, setSelectedVersionB] = useState<number | undefined>(undefined);
+  const [selectedVersionA, setSelectedVersionA] = useState<number | undefined>(
+    undefined,
+  );
+  const [selectedVersionB, setSelectedVersionB] = useState<number | undefined>(
+    undefined,
+  );
 
   // Active change filter tab
-  const [activeChangesTab, setActiveChangesTab] = useState<'all' | 'added' | 'removed' | 'rescheduled' | 'priorities'>('all');
+  const [activeChangesTab, setActiveChangesTab] = useState<
+    "all" | "added" | "removed" | "rescheduled" | "priorities"
+  >("all");
 
   // Trigger Replan modal state
   const [isSimulateModalOpen, setIsSimulateModalOpen] = useState(false);
-  const [simReason, setSimReason] = useState('DEADLINE_CHANGED');
-  const [simDescription, setSimDescription] = useState('Deadline brought forward by 48 hours due to stakeholder request');
+  const [simReason, setSimReason] = useState("DEADLINE_CHANGED");
+  const [simDescription, setSimDescription] = useState(
+    "Deadline brought forward by 48 hours due to stakeholder request",
+  );
   const [simDailyHours, setSimDailyHours] = useState(4.0);
   const [simulateError, setSimulateError] = useState<string | null>(null);
 
   // 1. Fetch Plan Versions List (for version dropdowns)
   const { data: plansData } = useQuery({
-    queryKey: ['goalPlans', goalId],
+    queryKey: ["goalPlans", goalId],
     queryFn: () => goalService.getPlans(goalId),
     enabled: Boolean(goalId),
   });
@@ -69,32 +77,43 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
     refetch: refetchDiff,
     isFetching: isFetchingDiff,
   } = useQuery<ReplanningDiffResponse>({
-    queryKey: ['goalReplanningDiff', goalId, selectedVersionA, selectedVersionB],
-    queryFn: () => goalService.getReplanningDiff(goalId, selectedVersionA, selectedVersionB),
+    queryKey: [
+      "goalReplanningDiff",
+      goalId,
+      selectedVersionA,
+      selectedVersionB,
+    ],
+    queryFn: () =>
+      goalService.getReplanningDiff(goalId, selectedVersionA, selectedVersionB),
     enabled: Boolean(goalId),
   });
 
   // Mutation to trigger real replanning event
   const triggerReplanMutation = useMutation({
-    mutationFn: (payload: { reason: string; description: string; details?: Record<string, unknown> }) =>
-      goalService.triggerReplan(goalId, payload),
+    mutationFn: (payload: {
+      reason: string;
+      description: string;
+      details?: Record<string, unknown>;
+    }) => goalService.triggerReplan(goalId, payload),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['goalReplanningDiff', goalId] });
-      queryClient.invalidateQueries({ queryKey: ['goalPlans', goalId] });
-      queryClient.invalidateQueries({ queryKey: ['goalActivePlan', goalId] });
-      queryClient.invalidateQueries({ queryKey: ['goal', goalId] });
+      queryClient.invalidateQueries({
+        queryKey: ["goalReplanningDiff", goalId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["goalPlans", goalId] });
+      queryClient.invalidateQueries({ queryKey: ["goalActivePlan", goalId] });
+      queryClient.invalidateQueries({ queryKey: ["goal", goalId] });
       setIsSimulateModalOpen(false);
       setSimulateError(null);
     },
     onError: (err: any) => {
-      setSimulateError(err?.message || 'Failed to trigger replanning');
+      setSimulateError(err?.message || "Failed to trigger replanning");
     },
   });
 
   const handleSimulateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!simDescription.trim()) {
-      setSimulateError('Description is required');
+      setSimulateError("Description is required");
       return;
     }
     triggerReplanMutation.mutate({
@@ -111,33 +130,38 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
   const changes = diffData?.changes;
   const prevPlan = diffData?.previous_plan;
   const newPlan = diffData?.new_plan;
-  const priorityChanges = diffData?.priority_changes || changes?.priority_changes || [];
+  const priorityChanges =
+    diffData?.priority_changes || changes?.priority_changes || [];
 
   const addedCount = changes?.tasks_added?.length || 0;
   const removedCount = changes?.tasks_removed?.length || 0;
   const rescheduledCount = changes?.tasks_rescheduled?.length || 0;
   const priorityCount = priorityChanges.length;
-  const totalChangesCount = addedCount + removedCount + rescheduledCount + priorityCount;
+  const totalChangesCount =
+    addedCount + removedCount + rescheduledCount + priorityCount;
 
   const getPriorityBadgeClass = (prio: GoalPriority | string) => {
     const p = String(prio).toLowerCase();
     switch (p) {
-      case 'critical':
-        return 'bg-rose-500/20 text-rose-300 border-rose-500/40';
-      case 'high':
-        return 'bg-orange-500/20 text-orange-300 border-orange-500/40';
-      case 'medium':
-        return 'bg-blue-500/20 text-blue-300 border-blue-500/40';
+      case "critical":
+        return "bg-rose-500/20 text-rose-300 border-rose-500/40";
+      case "high":
+        return "bg-orange-500/20 text-orange-300 border-orange-500/40";
+      case "medium":
+        return "bg-blue-500/20 text-blue-300 border-blue-500/40";
       default:
-        return 'bg-slate-700 text-slate-300 border-slate-600';
+        return "bg-slate-700 text-slate-300 border-slate-600";
     }
   };
 
-  const formatScheduleWindow = (startStr?: string | null, endStr?: string | null) => {
-    if (!startStr || !endStr) return 'Unscheduled';
+  const formatScheduleWindow = (
+    startStr?: string | null,
+    endStr?: string | null,
+  ) => {
+    if (!startStr || !endStr) return "Unscheduled";
     const s = new Date(startStr);
     const e = new Date(endStr);
-    return `${s.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} ${s.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })} - ${e.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} ${e.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`;
+    return `${s.toLocaleDateString(undefined, { month: "short", day: "numeric" })} ${s.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })} - ${e.toLocaleDateString(undefined, { month: "short", day: "numeric" })} ${e.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}`;
   };
 
   return (
@@ -168,7 +192,8 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
                 Goal: {goalTitle} &bull;
               </span>
             )}
-            Real-time visual comparison of schedule adaptations across constraint shifts, failures, and deadline updates.
+            Real-time visual comparison of schedule adaptations across
+            constraint shifts, failures, and deadline updates.
           </p>
         </div>
 
@@ -190,13 +215,17 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
               </select>
               <ArrowRight className="w-3 h-3 text-slate-500" />
               <select
-                value={selectedVersionB ?? (newPlan?.version || planVersions[planVersions.length - 1]?.version)}
+                value={
+                  selectedVersionB ??
+                  (newPlan?.version ||
+                    planVersions[planVersions.length - 1]?.version)
+                }
                 onChange={(e) => setSelectedVersionB(Number(e.target.value))}
                 className="bg-slate-950 border border-slate-800 rounded px-1.5 py-0.5 text-slate-200 text-xs focus:outline-none focus:border-emerald-500"
               >
                 {planVersions.map((p) => (
                   <option key={`b-${p.id}`} value={p.version}>
-                    v{p.version} {p.status === 'ACTIVE' ? '(Active)' : ''}
+                    v{p.version} {p.status === "ACTIVE" ? "(Active)" : ""}
                   </option>
                 ))}
               </select>
@@ -209,7 +238,9 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
             title="Refresh diff"
             aria-label="Refresh diff"
           >
-            <RefreshCw className={`w-4 h-4 ${isFetchingDiff ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`w-4 h-4 ${isFetchingDiff ? "animate-spin" : ""}`}
+            />
           </button>
 
           <Button
@@ -237,7 +268,8 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
         </div>
       ) : isDiffError ? (
         <Alert variant="error">
-          Failed to retrieve replanning diff from backend. Please verify backend service availability.
+          Failed to retrieve replanning diff from backend. Please verify backend
+          service availability.
         </Alert>
       ) : !diffData || !diffData.plan_changed ? (
         <Card className="text-center py-16 border-dashed border-slate-800">
@@ -246,10 +278,14 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
               <CheckCircle2 className="w-6 h-6 text-emerald-400" />
             </div>
             <div className="space-y-1">
-              <h3 className="text-base font-semibold text-white">Baseline Plan v1 Active</h3>
+              <h3 className="text-base font-semibold text-white">
+                Baseline Plan v1 Active
+              </h3>
               <p className="text-xs text-slate-400 max-w-md mx-auto">
-                No replanning events have modified the baseline execution schedule yet. When a task slips, deadline shifts,
-                or available hours change, LifeThread will automatically generate an explainable Plan Diff.
+                No replanning events have modified the baseline execution
+                schedule yet. When a task slips, deadline shifts, or available
+                hours change, LifeThread will automatically generate an
+                explainable Plan Diff.
               </p>
             </div>
             <Button
@@ -277,16 +313,19 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
                   <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
                 </span>
                 <span className="text-xl sm:text-2xl font-black tracking-tight text-white uppercase font-mono">
-                  {diffData.status_label || 'PLAN CHANGED'}
+                  {diffData.status_label || "PLAN CHANGED"}
                 </span>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  Plan v{prevPlan?.version || 1} &rarr; Plan v{newPlan?.version || 2}
+                  Plan v{prevPlan?.version || 1} &rarr; Plan v
+                  {newPlan?.version || 2}
                 </span>
               </div>
 
               <div className="flex items-center space-x-2">
-                <Badge variant={newPlan?.is_feasible ? 'success' : 'danger'}>
-                  {newPlan?.is_feasible ? 'FEASIBLE CANDIDATE' : 'INFEASIBLE ALERT'}
+                <Badge variant={newPlan?.is_feasible ? "success" : "danger"}>
+                  {newPlan?.is_feasible
+                    ? "FEASIBLE CANDIDATE"
+                    : "INFEASIBLE ALERT"}
                 </Badge>
                 {diffData.committed_at && (
                   <span className="text-[11px] font-mono text-slate-400">
@@ -325,7 +364,9 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
               </h3>
               <div className="text-[11px] font-mono text-slate-500 flex items-center space-x-1">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Safe User-Facing Explanation &bull; Private CoT Omitted</span>
+                <span>
+                  Safe User-Facing Explanation &bull; Private CoT Omitted
+                </span>
               </div>
             </div>
 
@@ -362,49 +403,63 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
                     Previous Plan (v{prevPlan?.version || 1})
                   </span>
                 </div>
-                <Badge variant="default">{prevPlan?.status || 'SUPERSEDED'}</Badge>
+                <Badge variant="default">
+                  {prevPlan?.status || "SUPERSEDED"}
+                </Badge>
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-1">
-                  <span className="text-slate-500 font-mono text-[11px]">Tasks Count</span>
+                  <span className="text-slate-500 font-mono text-[11px]">
+                    Tasks Count
+                  </span>
                   <div className="text-lg font-bold font-mono text-slate-200">
                     {prevPlan?.task_count ?? 0}
                   </div>
                 </div>
 
                 <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-1">
-                  <span className="text-slate-500 font-mono text-[11px]">Workload Duration</span>
+                  <span className="text-slate-500 font-mono text-[11px]">
+                    Workload Duration
+                  </span>
                   <div className="text-lg font-bold font-mono text-slate-200">
                     {prevPlan?.total_duration_minutes ?? 0}m
                   </div>
                 </div>
 
                 <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-1">
-                  <span className="text-slate-500 font-mono text-[11px]">Scheduled Finish</span>
+                  <span className="text-slate-500 font-mono text-[11px]">
+                    Scheduled Finish
+                  </span>
                   <div className="font-mono text-slate-200 truncate">
                     {prevPlan?.scheduled_end
-                      ? new Date(prevPlan.scheduled_end).toLocaleDateString(undefined, {
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })
-                      : 'N/A'}
+                      ? new Date(prevPlan.scheduled_end).toLocaleDateString(
+                          undefined,
+                          {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          },
+                        )
+                      : "N/A"}
                   </div>
                 </div>
 
                 <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 space-y-1">
-                  <span className="text-slate-500 font-mono text-[11px]">Risk Level</span>
+                  <span className="text-slate-500 font-mono text-[11px]">
+                    Risk Level
+                  </span>
                   <div>
                     <span
                       className={`text-xs font-mono font-bold uppercase px-2 py-0.5 rounded ${
-                        prevPlan?.risk_level === 'CRITICAL' || prevPlan?.risk_level === 'HIGH'
-                          ? 'bg-rose-500/20 text-rose-300'
-                          : 'bg-emerald-500/20 text-emerald-300'
+                        prevPlan?.risk_level === "CRITICAL" ||
+                        prevPlan?.risk_level === "HIGH"
+                          ? "bg-rose-500/20 text-rose-300"
+                          : "bg-emerald-500/20 text-emerald-300"
                       }`}
                     >
-                      {prevPlan?.risk_level || 'LOW'}
+                      {prevPlan?.risk_level || "LOW"}
                     </span>
                   </div>
                 </div>
@@ -420,51 +475,63 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
                     New Plan (v{newPlan?.version || 2})
                   </span>
                 </div>
-                <Badge variant={newPlan?.is_feasible ? 'success' : 'danger'}>
-                  {newPlan?.is_feasible ? 'FEASIBLE' : 'INFEASIBLE'}
+                <Badge variant={newPlan?.is_feasible ? "success" : "danger"}>
+                  {newPlan?.is_feasible ? "FEASIBLE" : "INFEASIBLE"}
                 </Badge>
               </div>
 
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                  <span className="text-slate-500 font-mono text-[11px]">Tasks Count</span>
+                  <span className="text-slate-500 font-mono text-[11px]">
+                    Tasks Count
+                  </span>
                   <div className="text-lg font-bold font-mono text-emerald-400">
                     {newPlan?.task_count ?? 0}
                   </div>
                 </div>
 
                 <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                  <span className="text-slate-500 font-mono text-[11px]">Workload Duration</span>
+                  <span className="text-slate-500 font-mono text-[11px]">
+                    Workload Duration
+                  </span>
                   <div className="text-lg font-bold font-mono text-emerald-400">
                     {newPlan?.total_duration_minutes ?? 0}m
                   </div>
                 </div>
 
                 <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                  <span className="text-slate-500 font-mono text-[11px]">Scheduled Finish</span>
+                  <span className="text-slate-500 font-mono text-[11px]">
+                    Scheduled Finish
+                  </span>
                   <div className="font-mono text-emerald-300 font-medium truncate">
                     {newPlan?.scheduled_end
-                      ? new Date(newPlan.scheduled_end).toLocaleDateString(undefined, {
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })
-                      : 'N/A'}
+                      ? new Date(newPlan.scheduled_end).toLocaleDateString(
+                          undefined,
+                          {
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          },
+                        )
+                      : "N/A"}
                   </div>
                 </div>
 
                 <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                  <span className="text-slate-500 font-mono text-[11px]">Risk Level</span>
+                  <span className="text-slate-500 font-mono text-[11px]">
+                    Risk Level
+                  </span>
                   <div>
                     <span
                       className={`text-xs font-mono font-bold uppercase px-2 py-0.5 rounded ${
-                        newPlan?.risk_level === 'CRITICAL' || newPlan?.risk_level === 'HIGH'
-                          ? 'bg-rose-500/20 text-rose-300'
-                          : 'bg-emerald-500/20 text-emerald-300'
+                        newPlan?.risk_level === "CRITICAL" ||
+                        newPlan?.risk_level === "HIGH"
+                          ? "bg-rose-500/20 text-rose-300"
+                          : "bg-emerald-500/20 text-emerald-300"
                       }`}
                     >
-                      {newPlan?.risk_level || 'LOW'}
+                      {newPlan?.risk_level || "LOW"}
                     </span>
                   </div>
                 </div>
@@ -486,58 +553,59 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
                   <span>Structural Plan Changes ({totalChangesCount})</span>
                 </h3>
                 <p className="text-xs text-slate-400">
-                  Granular task modifications made to satisfy revised scheduling constraints
+                  Granular task modifications made to satisfy revised scheduling
+                  constraints
                 </p>
               </div>
 
               {/* Sub-filter tabs */}
               <div className="flex items-center space-x-1.5 overflow-x-auto">
                 <button
-                  onClick={() => setActiveChangesTab('all')}
+                  onClick={() => setActiveChangesTab("all")}
                   className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors border ${
-                    activeChangesTab === 'all'
-                      ? 'bg-slate-800 text-white border-slate-700'
-                      : 'bg-slate-950/60 text-slate-400 border-slate-800 hover:text-slate-200'
+                    activeChangesTab === "all"
+                      ? "bg-slate-800 text-white border-slate-700"
+                      : "bg-slate-950/60 text-slate-400 border-slate-800 hover:text-slate-200"
                   }`}
                 >
                   All ({totalChangesCount})
                 </button>
                 <button
-                  onClick={() => setActiveChangesTab('added')}
+                  onClick={() => setActiveChangesTab("added")}
                   className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors border ${
-                    activeChangesTab === 'added'
-                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                      : 'bg-slate-950/60 text-slate-400 border-slate-800 hover:text-slate-200'
+                    activeChangesTab === "added"
+                      ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                      : "bg-slate-950/60 text-slate-400 border-slate-800 hover:text-slate-200"
                   }`}
                 >
                   Added (+{addedCount})
                 </button>
                 <button
-                  onClick={() => setActiveChangesTab('removed')}
+                  onClick={() => setActiveChangesTab("removed")}
                   className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors border ${
-                    activeChangesTab === 'removed'
-                      ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                      : 'bg-slate-950/60 text-slate-400 border-slate-800 hover:text-slate-200'
+                    activeChangesTab === "removed"
+                      ? "bg-rose-500/20 text-rose-300 border-rose-500/40"
+                      : "bg-slate-950/60 text-slate-400 border-slate-800 hover:text-slate-200"
                   }`}
                 >
                   Removed (-{removedCount})
                 </button>
                 <button
-                  onClick={() => setActiveChangesTab('rescheduled')}
+                  onClick={() => setActiveChangesTab("rescheduled")}
                   className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors border ${
-                    activeChangesTab === 'rescheduled'
-                      ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
-                      : 'bg-slate-950/60 text-slate-400 border-slate-800 hover:text-slate-200'
+                    activeChangesTab === "rescheduled"
+                      ? "bg-sky-500/20 text-sky-300 border-sky-500/40"
+                      : "bg-slate-950/60 text-slate-400 border-slate-800 hover:text-slate-200"
                   }`}
                 >
                   Rescheduled (&Delta;{rescheduledCount})
                 </button>
                 <button
-                  onClick={() => setActiveChangesTab('priorities')}
+                  onClick={() => setActiveChangesTab("priorities")}
                   className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors border ${
-                    activeChangesTab === 'priorities'
-                      ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
-                      : 'bg-slate-950/60 text-slate-400 border-slate-800 hover:text-slate-200'
+                    activeChangesTab === "priorities"
+                      ? "bg-purple-500/20 text-purple-300 border-purple-500/40"
+                      : "bg-slate-950/60 text-slate-400 border-slate-800 hover:text-slate-200"
                   }`}
                 >
                   Priorities ({priorityCount})
@@ -548,7 +616,7 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
             {/* List of Changes */}
             <div className="space-y-3">
               {/* 1. Added Tasks */}
-              {(activeChangesTab === 'all' || activeChangesTab === 'added') &&
+              {(activeChangesTab === "all" || activeChangesTab === "added") &&
                 changes?.tasks_added?.map((task, i) => (
                   <div
                     key={`add-${task.task_id || i}`}
@@ -562,14 +630,18 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
                         </span>
                         <span
                           className={`text-[10px] font-mono uppercase px-2 py-0.2 rounded border ${getPriorityBadgeClass(
-                            task.priority
+                            task.priority,
                           )}`}
                         >
                           {task.priority}
                         </span>
                       </div>
                       <div className="text-xs text-slate-400 font-mono pl-6">
-                        Added window: {formatScheduleWindow(task.scheduled_start, task.scheduled_end)}
+                        Added window:{" "}
+                        {formatScheduleWindow(
+                          task.scheduled_start,
+                          task.scheduled_end,
+                        )}
                       </div>
                     </div>
 
@@ -592,7 +664,7 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
                 ))}
 
               {/* 2. Removed Tasks */}
-              {(activeChangesTab === 'all' || activeChangesTab === 'removed') &&
+              {(activeChangesTab === "all" || activeChangesTab === "removed") &&
                 changes?.tasks_removed?.map((task, i) => (
                   <div
                     key={`rem-${task.task_id || i}`}
@@ -612,7 +684,8 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
                 ))}
 
               {/* 3. Rescheduled Tasks */}
-              {(activeChangesTab === 'all' || activeChangesTab === 'rescheduled') &&
+              {(activeChangesTab === "all" ||
+                activeChangesTab === "rescheduled") &&
                 changes?.tasks_rescheduled?.map((item) => (
                   <div
                     key={`resched-${item.task_id}`}
@@ -626,7 +699,7 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
                         </span>
                         <span
                           className={`text-[10px] font-mono uppercase px-2 py-0.2 rounded border ${getPriorityBadgeClass(
-                            item.priority
+                            item.priority,
                           )}`}
                         >
                           {item.priority}
@@ -637,11 +710,13 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
                         <span
                           className={`text-xs font-mono font-bold px-2 py-0.5 rounded ${
                             item.shift_hours > 0
-                              ? 'bg-amber-500/20 text-amber-300'
-                              : 'bg-emerald-500/20 text-emerald-300'
+                              ? "bg-amber-500/20 text-amber-300"
+                              : "bg-emerald-500/20 text-emerald-300"
                           }`}
                         >
-                          {item.shift_hours > 0 ? `+${item.shift_hours}h DELAYED` : `${item.shift_hours}h MOVED UP`}
+                          {item.shift_hours > 0
+                            ? `+${item.shift_hours}h DELAYED`
+                            : `${item.shift_hours}h MOVED UP`}
                         </span>
                         {onNavigateToTask && item.task_id && (
                           <button
@@ -659,10 +734,12 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
                     {/* Timeline Comparison */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono pl-6">
                       <div className="text-slate-400 line-through">
-                        Previous: {formatScheduleWindow(item.old_start, item.old_end)}
+                        Previous:{" "}
+                        {formatScheduleWindow(item.old_start, item.old_end)}
                       </div>
                       <div className="text-sky-300 font-medium">
-                        Revised: {formatScheduleWindow(item.new_start, item.new_end)}
+                        Revised:{" "}
+                        {formatScheduleWindow(item.new_start, item.new_end)}
                       </div>
                     </div>
 
@@ -675,7 +752,8 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
                 ))}
 
               {/* 4. Changed Priorities */}
-              {(activeChangesTab === 'all' || activeChangesTab === 'priorities') &&
+              {(activeChangesTab === "all" ||
+                activeChangesTab === "priorities") &&
                 priorityChanges.map((p) => (
                   <div
                     key={`prio-${p.task_id}`}
@@ -694,11 +772,15 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
                     </div>
 
                     <div className="flex items-center space-x-2 self-start sm:self-center font-mono text-xs">
-                      <span className={`px-2 py-0.5 rounded border ${getPriorityBadgeClass(p.old_priority)}`}>
+                      <span
+                        className={`px-2 py-0.5 rounded border ${getPriorityBadgeClass(p.old_priority)}`}
+                      >
                         {p.old_priority}
                       </span>
                       <ArrowRight className="w-3.5 h-3.5 text-purple-400" />
-                      <span className={`px-2 py-0.5 rounded border ${getPriorityBadgeClass(p.new_priority)} font-bold`}>
+                      <span
+                        className={`px-2 py-0.5 rounded border ${getPriorityBadgeClass(p.new_priority)} font-bold`}
+                      >
                         {p.new_priority}
                       </span>
                       {onNavigateToTask && p.task_id && (
@@ -717,7 +799,8 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
 
               {totalChangesCount === 0 && (
                 <div className="text-center py-8 text-xs text-slate-400">
-                  No structural task changes detected between selected plan versions.
+                  No structural task changes detected between selected plan
+                  versions.
                 </div>
               )}
             </div>
@@ -736,21 +819,27 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
         >
           <form onSubmit={handleSimulateSubmit} className="space-y-4">
             <p className="text-xs text-slate-400">
-              Submit a real execution or constraint shift. The Autonomous Replanning Engine will recalculate the critical
-              path, check feasibility, commit the new plan version, and compute the explainable Plan Diff.
+              Submit a real execution or constraint shift. The Autonomous
+              Replanning Engine will recalculate the critical path, check
+              feasibility, commit the new plan version, and compute the
+              explainable Plan Diff.
             </p>
 
             {simulateError && <Alert variant="error">{simulateError}</Alert>}
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-300">Trigger Reason</label>
+              <label className="text-xs font-medium text-slate-300">
+                Trigger Reason
+              </label>
               <select
                 value={simReason}
                 onChange={(e) => setSimReason(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 font-mono"
               >
                 <option value="DEADLINE_CHANGED">DEADLINE_CHANGED</option>
-                <option value="AVAILABLE_TIME_CHANGED">AVAILABLE_TIME_CHANGED</option>
+                <option value="AVAILABLE_TIME_CHANGED">
+                  AVAILABLE_TIME_CHANGED
+                </option>
                 <option value="TASK_FAILED">TASK_FAILED</option>
                 <option value="TASK_BLOCKED">TASK_BLOCKED</option>
                 <option value="PRIORITY_CHANGED">PRIORITY_CHANGED</option>
@@ -759,7 +848,9 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-300">Description of Real-World Event</label>
+              <label className="text-xs font-medium text-slate-300">
+                Description of Real-World Event
+              </label>
               <textarea
                 value={simDescription}
                 onChange={(e) => setSimDescription(e.target.value)}
@@ -799,7 +890,9 @@ export const ReplanningDiffViewer: React.FC<ReplanningDiffViewerProps> = ({
                 disabled={triggerReplanMutation.isPending}
                 size="sm"
               >
-                {triggerReplanMutation.isPending ? 'Replanning...' : 'Execute Replan'}
+                {triggerReplanMutation.isPending
+                  ? "Replanning..."
+                  : "Execute Replan"}
               </Button>
             </div>
           </form>

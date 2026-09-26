@@ -1,6 +1,6 @@
-import { GoalPriority } from './goal';
+import { GoalPriority } from "./goal";
 
-export type PlanStatus = 'DRAFT' | 'ACTIVE' | 'SUPERSEDED' | 'ARCHIVED';
+export type PlanStatus = "DRAFT" | "ACTIVE" | "SUPERSEDED" | "ARCHIVED";
 
 export interface PlanItem {
   id: string;
