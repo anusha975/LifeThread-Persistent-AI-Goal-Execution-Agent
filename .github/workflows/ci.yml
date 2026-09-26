@@ -1,0 +1,316 @@
+name: LifeThread CI/CD Pipeline
+
+"on":
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "22"
+  # Secure defaults: Non-production placeholders for CI test runners
+  ENVIRONMENT: test
+  JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY || 'ci_ephemeral_jwt_secret_key_for_testing_only_123456789' }}
+  AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
+
+jobs:
+  # =========================================================================
+  # STAGE 1: Install Dependencies
+  # =========================================================================
+  install:
+    name: "1. Install Dependencies"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package.json
+
+      - name: Install Python packages
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install -e backend/
+          python -m pip install -e agent/
+          python -m pip install -e mcp-server/
+          python -m pip install ruff mypy pytest pytest-asyncio aiosqlite
+
+      - name: Install Frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+  # =========================================================================
+  # STAGE 2: Code Linting
+  # =========================================================================
+  lint:
+    name: "2. Lint Checks"
+    needs: [install]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Run Python Ruff Linter
+        run: |
+          pip install ruff
+          python -m ruff check backend/ agent/ mcp-server/ tests/
+
+      - name: Run Frontend Formatting Check
+        working-directory: frontend
+        run: |
+          npm ci
+          npx prettier --check "src/**/*.{ts,tsx,css}"
+
+  # =========================================================================
+  # STAGE 3: Type Checking
+  # =========================================================================
+  type-check:
+    name: "3. Type Checking"
+    needs: [install]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Frontend TypeScript Type Check
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run typecheck
+
+      - name: Backend Type Validation
+        run: |
+          python -m pip install mypy
+          python -m mypy backend/app/core/config.py backend/app/services/agent_trace/models.py backend/app/services/observability/models.py
+
+  # =========================================================================
+  # STAGE 4: Unit Tests
+  # =========================================================================
+  unit-tests:
+    name: "4. Unit Tests"
+    needs: [lint, type-check]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install -e backend/ -e agent/ -e mcp-server/
+          python -m pip install pytest pytest-asyncio aiosqlite
+
+      - name: Run Backend Unit Tests
+        run: |
+          python -m pytest backend/tests/test_permission_system.py backend/tests/test_aws_ai_integration.py backend/tests/test_agent_trace_system.py backend/tests/test_agent_observability.py -v
+
+      - name: Run Frontend Vitest Unit Tests
+        working-directory: frontend
+        run: |
+          npm ci
+          npm test
+
+  # =========================================================================
+  # STAGE 5: Integration Tests
+  # =========================================================================
+  integration-tests:
+    name: "5. Integration Tests"
+    needs: [unit-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install -e backend/ -e agent/ -e mcp-server/
+          python -m pip install pytest pytest-asyncio aiosqlite
+
+      - name: Run Agent Scenarios & Comprehensive Integration Tests
+        run: |
+          python -m pytest backend/tests/test_automated_agent_evaluation.py backend/tests/test_module_40_comprehensive_suite.py -v
+
+  # =========================================================================
+  # STAGE 6: Security Checks
+  # =========================================================================
+  security-checks:
+    name: "6. Security Checks"
+    needs: [lint]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Execute Security Verification Suite
+        run: |
+          python scripts/security_check.py
+
+  # =========================================================================
+  # STAGE 7: Frontend Build
+  # =========================================================================
+  frontend-build:
+    name: "7. Frontend Build"
+    needs: [unit-tests, security-checks]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Build Production Frontend Assets
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Verify Frontend Build Artifacts
+        run: |
+          test -f frontend/dist/index.html || exit 1
+          echo "Frontend distribution artifacts built successfully."
+
+  # =========================================================================
+  # STAGE 8: Backend Build
+  # =========================================================================
+  backend-build:
+    name: "8. Backend Build"
+    needs: [integration-tests, security-checks]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Build Backend Wheel Distribution Package
+        run: |
+          python -m pip install --upgrade pip wheel build
+          python -m build backend/ --wheel --outdir backend/dist/
+          ls -la backend/dist/
+
+      - name: Verify Backend Wheel Package
+        run: |
+          python -c "
+          from pathlib import Path
+          wheels = list(Path('backend/dist').glob('*.whl'))
+          assert len(wheels) == 1, f'Expected 1 wheel, found {len(wheels)}'
+          print(f'Verified wheel package: {wheels[0].name}')
+          "
+
+  # =========================================================================
+  # STAGE 9: Container Build
+  # =========================================================================
+  container-build:
+    name: "9. Container Build"
+    needs: [frontend-build, backend-build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Backend Container Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: infrastructure/docker/Dockerfile.backend
+          push: false
+          tags: lifethread-backend:ci
+
+      - name: Build Frontend Container Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: infrastructure/docker/Dockerfile.frontend
+          push: false
+          tags: lifethread-frontend:ci
+
+      - name: Build Agent Container Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: infrastructure/docker/Dockerfile.agent
+          push: false
+          tags: lifethread-agent:ci
+
+      - name: Build MCP Server Container Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: infrastructure/docker/Dockerfile.mcp
+          push: false
+          tags: lifethread-mcp:ci
+
+  # =========================================================================
+  # POLICY NOTE: Production Deployment is NOT Automated
+  # =========================================================================
+  # Continuous Deployment to production is strictly forbidden on commit / push.
+  # Production releases require manual approval, tagged release triggers,
+  # and deployment gates configured in a separate protected release pipeline.

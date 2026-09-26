@@ -1,0 +1,9 @@
+# Example Terraform variables for Production Environment
+# Copy to terraform.tfvars (ignored by git - NEVER commit secrets)
+
+aws_region         = "us-east-1"
+environment        = "production"
+project_name       = "lifethread"
+vpc_cidr           = "10.0.0.0/16"
+availability_zones = ["us-east-1a", "us-east-1b", "us-east-1c"]
+container_image    = "123456789012.dkr.ecr.us-east-1.amazonaws.com/lifethread-backend:v1.0.0"

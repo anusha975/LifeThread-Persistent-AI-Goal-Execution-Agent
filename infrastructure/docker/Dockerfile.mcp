@@ -1,0 +1,35 @@
+# Standalone multi-stage Dockerfile for LifeThread MCP Server
+FROM python:3.12-slim AS builder
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+COPY mcp-server/pyproject.toml ./mcp-server/
+RUN pip install --no-cache-dir ./mcp-server
+
+FROM python:3.12-slim AS runner
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    ENVIRONMENT=production
+
+RUN addgroup --system lifethread && adduser --system --group lifethread
+
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+COPY mcp-server/mcp_server /app/mcp_server
+COPY mcp-server/pyproject.toml /app/
+
+USER lifethread
+
+EXPOSE 8001
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')" || exit 1
+
+CMD ["python", "-m", "mcp_server.server"]

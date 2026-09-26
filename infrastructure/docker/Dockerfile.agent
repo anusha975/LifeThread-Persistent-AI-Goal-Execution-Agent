@@ -1,0 +1,44 @@
+# Production-grade multi-stage Dockerfile for LifeThread Agent Worker
+FROM python:3.12-slim AS builder
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY agent/pyproject.toml ./agent/
+RUN pip install --no-cache-dir ./agent
+
+FROM python:3.12-slim AS runner
+
+WORKDIR /app
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    ENVIRONMENT=production \
+    AGENT_WORKER_PORT=8002 \
+    AGENT_WORKER_HOST=0.0.0.0
+
+# Create non-root user for security
+RUN addgroup --system lifethread && adduser --system --group lifethread
+
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+COPY agent/lifethread_agent /app/lifethread_agent
+COPY agent/pyproject.toml /app/
+
+# Switch to non-root user
+USER lifethread
+
+EXPOSE 8002
+
+HEALTHCHECK --interval=20s --timeout=5s --start-period=5s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8002/health')" || exit 1
+
+CMD ["python", "-m", "lifethread_agent.worker"]

@@ -1,0 +1,43 @@
+{
+  "database_queries": {
+    "batch_insert_50_goals_ms": 11.331,
+    "query_filtered_goals_ms": 11.359
+  },
+  "api_latency": {
+    "health_endpoint_ms": 1.5,
+    "root_discovery_ms": 1.431,
+    "reqs_per_sec": 666.8
+  },
+  "vector_search": {
+    "candidate_count": 250,
+    "latency_ms": 118.572,
+    "ops_per_sec": 2108.4
+  },
+  "rag_retrieval": {
+    "chunk_count": 30,
+    "rerank_and_build_ms": 0.682,
+    "throughput_queries_sec": 1466.3
+  },
+  "context_construction": {
+    "candidate_count": 80,
+    "latency_ms": 4.671,
+    "builds_per_sec": 214.1
+  },
+  "llm_calls": {
+    "uncached_call_ms": 0.016,
+    "throughput_calls_per_sec": 63633.5
+  },
+  "frontend_loading": {
+    "total_js_size_kb": 445.55,
+    "js_files": [
+      [
+        "index-CsofvRgS.js",
+        445.55
+      ]
+    ]
+  },
+  "mcp_calls": {
+    "rpc_serialization_overhead_ms": 0.0084,
+    "dispatches_per_sec": 119445.8
+  }
+}

@@ -1,0 +1,72 @@
+# Automated Test Docker Compose for LifeThread Platform (Module 41)
+# Runs the full backend and frontend test suites in an isolated, ephemeral CI/CD environment
+
+services:
+  postgres-test:
+    image: pgvector/pgvector:pg16
+    container_name: lifethread-postgres-test
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+      POSTGRES_DB: test_lifethread_db
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user -d test_lifethread_db"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+    networks:
+      - lifethread-test-net
+
+  redis-test:
+    image: redis:7-alpine
+    container_name: lifethread-redis-test
+    tmpfs:
+      - /data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+    networks:
+      - lifethread-test-net
+
+  backend-test:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.backend
+    container_name: lifethread-backend-test
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+    environment:
+      ENVIRONMENT: test
+      TESTING: "true"
+      DATABASE_URL: postgresql+asyncpg://test_user:test_password@postgres-test:5432/test_lifethread_db
+      REDIS_URL: redis://redis-test:6379/0
+      JWT_SECRET_KEY: test_ephemeral_jwt_secret_key_12345
+    volumes:
+      - ./backend/tests:/app/tests
+    command: ["python", "-m", "pytest", "tests/", "-v", "--durations=10"]
+    networks:
+      - lifethread-test-net
+
+  frontend-test:
+    image: node:22-alpine
+    container_name: lifethread-frontend-test
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    environment:
+      CI: "true"
+    command: ["sh", "-c", "npm ci && npm test"]
+    networks:
+      - lifethread-test-net
+
+networks:
+  lifethread-test-net:
+    name: lifethread_test_network
+    driver: bridge

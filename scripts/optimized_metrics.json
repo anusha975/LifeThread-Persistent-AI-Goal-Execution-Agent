@@ -1,0 +1,122 @@
+{
+  "database_queries": {
+    "batch_insert_50_goals_ms": 14.055,
+    "cached_query_goals_ms": 0.0045
+  },
+  "api_latency": {
+    "health_endpoint_ms": 1.282,
+    "root_discovery_ms": 1.297,
+    "reqs_per_sec": 780.3
+  },
+  "vector_search": {
+    "candidate_count": 250,
+    "latency_ms": 79.037,
+    "ops_per_sec": 3163.1
+  },
+  "rag_retrieval": {
+    "chunk_count": 30,
+    "rerank_and_build_ms": 0.735,
+    "throughput_queries_sec": 1360.3
+  },
+  "context_construction": {
+    "candidate_count": 80,
+    "latency_ms": 2.7275,
+    "builds_per_sec": 366.6
+  },
+  "llm_calls": {
+    "cached_call_ms": 0.0232,
+    "cache_hits": 50,
+    "throughput_calls_per_sec": 43029.3
+  },
+  "frontend_loading": {
+    "total_js_size_kb": 453.84,
+    "entry_chunk_size_kb": 37.95,
+    "chunk_count": 20,
+    "js_files": [
+      [
+        "AgentActivityPage-C0AB77wN.js",
+        16.43
+      ],
+      [
+        "Alert-DLEbEAj-.js",
+        1.34
+      ],
+      [
+        "AssistantPage-D-nI90JA.js",
+        19.31
+      ],
+      [
+        "Badge-Lwpz2mie.js",
+        1.16
+      ],
+      [
+        "dashboardMetrics-D-LdRrQk.js",
+        3.01
+      ],
+      [
+        "DashboardPage---MOptyR.js",
+        25.92
+      ],
+      [
+        "GoalDetailPage-B-WaM7Tx.js",
+        61.85
+      ],
+      [
+        "GoalsPage-Bou53hqY.js",
+        8.34
+      ],
+      [
+        "index-DgSigmFq.js",
+        37.95
+      ],
+      [
+        "Input-BzwVHQql.js",
+        1.42
+      ],
+      [
+        "LoginPage-8A_Wj7Pf.js",
+        3.35
+      ],
+      [
+        "MemoryContextPage-uS654u0i.js",
+        23.1
+      ],
+      [
+        "Modal-Bp28sKHU.js",
+        3.26
+      ],
+      [
+        "NotFoundPage-Di2FL3rJ.js",
+        1.19
+      ],
+      [
+        "Progress-kCNf_5PH.js",
+        1.18
+      ],
+      [
+        "RegisterPage-B2DRlO-l.js",
+        4.01
+      ],
+      [
+        "Skeleton-BS1WWGAO.js",
+        1.5
+      ],
+      [
+        "vendor-icons-DHPFaUC-.js",
+        22.46
+      ],
+      [
+        "vendor-query-DKbBJezb.js",
+        40.59
+      ],
+      [
+        "vendor-react-DdwgUtU3.js",
+        176.46
+      ]
+    ]
+  },
+  "mcp_calls": {
+    "cached_discovery_ms": 0.0009,
+    "dispatches_per_sec": 1173706.4
+  }
+}
