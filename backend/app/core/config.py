@@ -1,6 +1,7 @@
+import json
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -31,6 +32,25 @@ class Settings(BaseSettings):
         "http://localhost:5173",
         "http://127.0.0.1:5173",
     ]
+
+    @field_validator("BACKEND_CORS_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: str | list[str]) -> list[str]:
+        if isinstance(v, str):
+            v_strip = v.strip()
+            if v_strip == "*":
+                return ["*"]
+            if v_strip.startswith("[") and v_strip.endswith("]"):
+                try:
+                    parsed = json.loads(v_strip)
+                    if isinstance(parsed, list):
+                        return [str(item) for item in parsed]
+                except Exception:
+                    pass
+            return [i.strip() for i in v_strip.split(",") if i.strip()]
+        elif isinstance(v, list):
+            return [str(item) for item in v]
+        return ["*"]
 
     # Database (PostgreSQL Connection Parameters)
     POSTGRES_USER: str = "lifethread_user"

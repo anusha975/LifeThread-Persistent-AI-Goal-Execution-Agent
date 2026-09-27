@@ -41,6 +41,18 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         "LifeThread backend initializing",
         extra={"environment": settings.ENVIRONMENT, "debug": settings.DEBUG},
     )
+
+    # Initialize tables if SQLite or initial deployment
+    try:
+        from app.db.base import Base
+        from app.db.session import get_engine
+        engine = get_engine()
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("Database tables verified/created successfully.")
+    except Exception as exc:
+        logger.warning("Could not auto-initialize database tables: %s", exc)
+
     yield
     await close_db_engine()
     logger.info("LifeThread backend shutting down")
@@ -104,6 +116,7 @@ def create_application() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.BACKEND_CORS_ORIGINS,
+        allow_origin_regex=r"https://.*\.onrender\.com|https://.*\.vercel\.app|http://localhost:\d+|http://127\.0\.0\.1:\d+",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

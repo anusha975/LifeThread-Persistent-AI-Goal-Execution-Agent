@@ -1,3 +1,5 @@
+import { buildApiUrl } from "./apiClient";
+
 export interface HealthData {
   status: string;
   service: string;
@@ -12,7 +14,7 @@ export interface ReadinessData {
 }
 
 export async function fetchHealth(): Promise<HealthData> {
-  const response = await fetch("/api/v1/health");
+  const response = await fetch(buildApiUrl("/health"));
   if (!response.ok) {
     throw new Error(`Health check failed with status: ${response.status}`);
   }
@@ -20,7 +22,7 @@ export async function fetchHealth(): Promise<HealthData> {
 }
 
 export async function fetchReadiness(): Promise<ReadinessData> {
-  const response = await fetch("/api/v1/ready");
+  const response = await fetch(buildApiUrl("/ready"));
   if (!response.ok) {
     throw new Error(`Readiness check failed with status: ${response.status}`);
   }

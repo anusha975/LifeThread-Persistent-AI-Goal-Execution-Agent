@@ -24,6 +24,8 @@ services:
         generateValue: true
       - key: CORS_ORIGINS
         value: "*"
+      - key: BACKEND_CORS_ORIGINS
+        value: '["*"]'
       - key: DATABASE_URL
         value: sqlite+aiosqlite:///lifethread.db
 
@@ -35,6 +37,9 @@ services:
     rootDir: frontend
     buildCommand: npm run build
     staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        value: https://lifethread-backend.onrender.com
     routes:
       - type: rewrite
         source: /*

@@ -38,6 +38,37 @@ function notifyAuthChange(isAuthenticated: boolean): void {
 let isRefreshing = false;
 let refreshPromise: Promise<string | null> | null = null;
 
+/**
+ * Resolves the backend API base URL:
+ * 1. Checks VITE_API_BASE_URL (configured via build/env)
+ * 2. If running on Render static hosting (*.onrender.com), falls back to the backend service URL
+ * 3. Otherwise empty string (for local development with Vite dev proxy)
+ */
+export function getApiBaseUrl(): string {
+  const envUrl = import.meta.env?.VITE_API_BASE_URL;
+  if (envUrl && typeof envUrl === "string" && envUrl.trim() !== "") {
+    return envUrl.trim().replace(/\/+$/, "");
+  }
+  if (
+    typeof window !== "undefined" &&
+    window.location.hostname.endsWith(".onrender.com") &&
+    !window.location.hostname.includes("backend")
+  ) {
+    return "https://lifethread-backend.onrender.com";
+  }
+  return "";
+}
+
+export function buildApiUrl(endpoint: string): string {
+  if (endpoint.startsWith("http://") || endpoint.startsWith("https://")) {
+    return endpoint;
+  }
+  const base = getApiBaseUrl();
+  const normalized = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  const path = normalized.startsWith("/api") ? normalized : `/api/v1${normalized}`;
+  return `${base}${path}`;
+}
+
 async function refreshAccessToken(): Promise<string | null> {
   if (isRefreshing && refreshPromise) {
     return refreshPromise;
@@ -53,7 +84,7 @@ async function refreshAccessToken(): Promise<string | null> {
   isRefreshing = true;
   refreshPromise = (async () => {
     try {
-      const response = await fetch("/api/v1/auth/refresh", {
+      const response = await fetch(buildApiUrl("/auth/refresh"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refresh_token: refreshToken }),
@@ -109,8 +140,14 @@ async function parseError(response: Response): Promise<APIError> {
       message = data.message;
     }
   } catch {
-    // Response body not JSON or empty
-    message = response.statusText || message;
+    // Response body not JSON or empty (e.g., Render HTML error pages)
+    if (status === 503) {
+      message = "Backend service is currently suspended or spinning up on Render. Please check your Render dashboard to resume it.";
+    } else if (status === 404) {
+      message = "API endpoint not found. Please verify the backend service URL.";
+    } else {
+      message = response.statusText || message;
+    }
   }
 
   return new APIError(status, message, code, details, requestId);
@@ -131,10 +168,7 @@ export async function request<T>(
     defaultHeaders["Authorization"] = `Bearer ${token}`;
   }
 
-  const url =
-    endpoint.startsWith("http") || endpoint.startsWith("/api")
-      ? endpoint
-      : `/api/v1${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+  const url = buildApiUrl(endpoint);
 
   const config: RequestInit = {
     ...customConfig,
