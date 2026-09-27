@@ -1,5 +1,6 @@
 import React from "react";
 import { cn } from "../../utils/cn";
+import { GoalPriority, GoalStatus } from "../../types/goal";
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   variant?:
@@ -8,15 +9,9 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
     | "warning"
     | "danger"
     | "info"
-    | "active"
-    | "paused"
-    | "completed"
-    | "archived"
-    | "failed"
-    | "critical"
-    | "high"
-    | "medium"
-    | "low";
+    | GoalStatus
+    | GoalPriority
+    | (string & {});
 }
 
 export const Badge: React.FC<BadgeProps> = ({
@@ -46,11 +41,15 @@ export const Badge: React.FC<BadgeProps> = ({
     low: "bg-slate-800 text-slate-400 border-slate-700",
   };
 
+  const normalizedKey = (variant || "default").toLowerCase();
+  const badgeStyle =
+    variants[normalizedKey] || variants[variant] || variants.default;
+
   return (
     <span
       className={cn(
         "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border capitalize tracking-wide",
-        variants[variant] || variants.default,
+        badgeStyle,
         className,
       )}
       {...props}

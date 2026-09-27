@@ -367,3 +367,70 @@ async def test_validation_meaningful_title_and_deadline(
         },
     )
     assert resp_past_deadline.status_code == 422
+
+    # 4. Invalid priority enum
+    resp_invalid_priority = await async_test_client.post(
+        "/api/v1/goals",
+        headers=auth_headers_user_a,
+        json={
+            "title": "Invalid Priority Goal",
+            "objective": "Valid objective description text",
+            "priority": "super_urgent",
+        },
+    )
+    assert resp_invalid_priority.status_code == 422
+    err_body = resp_invalid_priority.json()
+    assert err_body["error"]["code"] == "VALIDATION_ERROR"
+
+    # 5. Missing required objective
+    resp_missing_objective = await async_test_client.post(
+        "/api/v1/goals",
+        headers=auth_headers_user_a,
+        json={"title": "No Objective Goal"},
+    )
+    assert resp_missing_objective.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_create_goal_priority_case_handling(
+    async_test_client: AsyncClient,
+    auth_headers_user_a: dict[str, str],
+) -> None:
+    # Creating with lowercase 'high' should succeed and normalize to 'HIGH'
+    resp_lower = await async_test_client.post(
+        "/api/v1/goals",
+        headers=auth_headers_user_a,
+        json={
+            "title": "Lowercase Priority Goal",
+            "objective": "Valid objective description text",
+            "priority": "high",
+        },
+    )
+    assert resp_lower.status_code == 201
+    assert resp_lower.json()["priority"] == "HIGH"
+
+
+@pytest.mark.asyncio
+async def test_create_goal_unauthenticated(
+    async_test_client: AsyncClient,
+) -> None:
+    # 1. Missing header -> 401 or 403 (FastAPI HTTPBearer)
+    resp_no_header = await async_test_client.post(
+        "/api/v1/goals",
+        json={
+            "title": "Unauthenticated Goal",
+            "objective": "Valid objective description text",
+        },
+    )
+    assert resp_no_header.status_code in (401, 403)
+
+    # 2. Invalid bearer token -> 401 Unauthorized
+    resp_invalid_token = await async_test_client.post(
+        "/api/v1/goals",
+        headers={"Authorization": "Bearer invalid-token-string"},
+        json={
+            "title": "Unauthenticated Goal",
+            "objective": "Valid objective description text",
+        },
+    )
+    assert resp_invalid_token.status_code == 401

@@ -53,11 +53,27 @@ export const GoalsPage: React.FC = () => {
     onSuccess: (data) => {
       if (data.title) setTitle(data.title);
       if (data.objective) setObjective(data.objective);
-      if (data.priority) setPriority(data.priority);
+      if (data.description) setDescription(data.description);
+      if (data.priority) {
+        const p = data.priority.toLowerCase();
+        if (
+          p === "low" ||
+          p === "medium" ||
+          p === "high" ||
+          p === "critical"
+        ) {
+          setPriority(p as GoalPriority);
+        }
+      }
       if (data.deadline) {
         try {
           const d = new Date(data.deadline);
-          setDeadline(d.toISOString().slice(0, 16));
+          if (!isNaN(d.getTime())) {
+            const localIso = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+              .toISOString()
+              .slice(0, 16);
+            setDeadline(localIso);
+          }
         } catch {
           // ignore date parse issues
         }
@@ -66,7 +82,22 @@ export const GoalsPage: React.FC = () => {
     },
     onError: (err: unknown) => {
       if (err instanceof APIError) {
-        setFormError(err.message);
+        if (err.status === 422) {
+          setFormError(
+            err.message ||
+              "Goal understanding validation failed. Please enter parameters manually.",
+          );
+        } else if (err.status === 401) {
+          setFormError("Session expired. Please sign in again.");
+        } else if (err.status === 403) {
+          setFormError("Permission denied.");
+        } else if (err.status >= 500) {
+          setFormError("Backend error during goal understanding. Please enter parameters manually.");
+        } else if (err.status === 0) {
+          setFormError("Connection error: Unable to reach backend service.");
+        } else {
+          setFormError(err.message);
+        }
       } else {
         setFormError(
           "Goal understanding failed. Please enter parameters manually.",
@@ -101,7 +132,21 @@ export const GoalsPage: React.FC = () => {
     },
     onError: (err: unknown) => {
       if (err instanceof APIError) {
-        setFormError(err.message);
+        if (err.status === 422) {
+          setFormError(
+            err.message || "Input validation failed. Please check the fields.",
+          );
+        } else if (err.status === 401) {
+          setFormError("Session expired. Please sign in again.");
+        } else if (err.status === 403) {
+          setFormError("Permission denied. You do not have access to perform this operation.");
+        } else if (err.status >= 500) {
+          setFormError("Internal server error. Please try again later.");
+        } else if (err.status === 0) {
+          setFormError("Connection error: Unable to reach backend service.");
+        } else {
+          setFormError(err.message);
+        }
       } else {
         setFormError("Failed to create goal. Please review your inputs.");
       }
@@ -120,23 +165,40 @@ export const GoalsPage: React.FC = () => {
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (title.trim().length < 3) {
+    const cleanTitle = title.trim();
+    const cleanObjective = objective.trim();
+
+    if (!cleanTitle || cleanTitle.length < 3) {
       setFormError("Title must be at least 3 characters");
       return;
     }
-    if (objective.trim().length < 5) {
+    if (!cleanObjective || cleanObjective.length < 5) {
       setFormError("Objective must be at least 5 characters");
       return;
+    }
+
+    let deadlineIso: string | null = null;
+    if (deadline && deadline.trim()) {
+      const d = new Date(deadline);
+      if (isNaN(d.getTime())) {
+        setFormError("Invalid deadline date/time format");
+        return;
+      }
+      if (d.getTime() < Date.now() - 10 * 60 * 1000) {
+        setFormError("Goal deadline cannot be set in the past");
+        return;
+      }
+      deadlineIso = d.toISOString();
     }
 
     setFormError(null);
 
     const payload: GoalCreatePayload = {
-      title: title.trim(),
-      objective: objective.trim(),
+      title: cleanTitle,
+      objective: cleanObjective,
       description: description.trim() || null,
       priority,
-      deadline: deadline ? new Date(deadline).toISOString() : null,
+      deadline: deadlineIso,
       success_criteria: [],
     };
 
@@ -345,7 +407,7 @@ export const GoalsPage: React.FC = () => {
       <Modal
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
-        title="Create Autonomous Goal"
+        title="Create New Objective"
         description="Provide high-level mission parameters. The agent will interpret and structure execution."
         maxWidth="lg"
       >
@@ -353,7 +415,7 @@ export const GoalsPage: React.FC = () => {
           {formError && (
             <Alert
               variant="error"
-              title="Creation Error"
+              title="Input Error"
               onDismiss={() => setFormError(null)}
             >
               {formError}

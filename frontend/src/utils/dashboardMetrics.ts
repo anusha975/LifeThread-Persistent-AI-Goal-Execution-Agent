@@ -197,11 +197,15 @@ export function calculateDeadlineRisk(
   };
 }
 
-const priorityRank: Record<GoalPriority, number> = {
+const priorityRank: Record<string, number> = {
   critical: 4,
   high: 3,
   medium: 2,
   low: 1,
+  CRITICAL: 4,
+  HIGH: 3,
+  MEDIUM: 2,
+  LOW: 1,
 };
 
 /**
@@ -210,8 +214,12 @@ const priorityRank: Record<GoalPriority, number> = {
 export function calculateOverallSummary(
   goals: Goal[],
 ): DashboardOverallSummary {
-  const activeGoals = goals.filter((g) => g.status === "active");
-  const completedGoals = goals.filter((g) => g.status === "completed");
+  const activeGoals = goals.filter(
+    (g) => (g.status || "").toLowerCase() === "active",
+  );
+  const completedGoals = goals.filter(
+    (g) => (g.status || "").toLowerCase() === "completed",
+  );
 
   let totalMilestonesCount = 0;
   let completedMilestonesCount = 0;
@@ -237,10 +245,11 @@ export function calculateOverallSummary(
   // Find highest active priority
   let highestPriority: GoalPriority | null = null;
   activeGoals.forEach((g) => {
-    if (
-      !highestPriority ||
-      priorityRank[g.priority] > priorityRank[highestPriority]
-    ) {
+    const gRank = priorityRank[g.priority] ?? 0;
+    const currentRank = highestPriority
+      ? (priorityRank[highestPriority] ?? 0)
+      : 0;
+    if (!highestPriority || gRank > currentRank) {
       highestPriority = g.priority;
     }
   });

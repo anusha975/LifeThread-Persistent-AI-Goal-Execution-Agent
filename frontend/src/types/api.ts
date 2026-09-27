@@ -1,27 +1,27 @@
 export interface APIErrorDetail {
   code?: string;
   message: string;
-  details?: Record<string, unknown> | null;
+  details?: unknown;
   request_id?: string;
 }
 
 export interface APIErrorResponse {
   error?: APIErrorDetail;
-  detail?: string | Array<{ msg: string; loc: string[] }>;
+  detail?: string | Array<{ msg: string; loc: (string | number)[] }>;
   message?: string;
 }
 
 export class APIError extends Error {
   public status: number;
   public code?: string;
-  public details?: Record<string, unknown> | null;
+  public details?: unknown;
   public requestId?: string;
 
   constructor(
     status: number,
     message: string,
     code?: string,
-    details?: Record<string, unknown> | null,
+    details?: unknown,
     requestId?: string,
   ) {
     super(message);

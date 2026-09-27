@@ -99,6 +99,15 @@ class GoalCreate(BaseModel):
                 raise ValueError("Goal deadline cannot be set in the past")
         return v
 
+    @field_validator("priority", mode="before")
+    @classmethod
+    def normalize_priority(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            val = v.strip().upper()
+            if hasattr(GoalPriority, val):
+                return GoalPriority(val)
+        return v
+
 
 class GoalUpdate(BaseModel):
     """Payload for partial updates to a goal."""
@@ -128,6 +137,15 @@ class GoalUpdate(BaseModel):
             v_utc = v if v.tzinfo is not None else v.replace(tzinfo=UTC)
             if v_utc < (now - timedelta(minutes=10)):
                 raise ValueError("Goal deadline cannot be set in the past")
+        return v
+
+    @field_validator("priority", mode="before")
+    @classmethod
+    def normalize_priority(cls, v: Any) -> Any:
+        if v is not None and isinstance(v, str):
+            val = v.strip().upper()
+            if hasattr(GoalPriority, val):
+                return GoalPriority(val)
         return v
 
 

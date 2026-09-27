@@ -16,11 +16,43 @@ import { Plan, PlanListResponse } from "../types/plan";
 import { GoalEvaluation } from "../types/evaluation";
 import { ReplanningDiffResponse } from "../types/replanning";
 import { apiClient } from "./apiClient";
+import { APIError } from "../types/api";
 
 export interface ListGoalsParams {
   status?: GoalStatus;
   limit?: number;
   offset?: number;
+}
+
+export function normalizePriorityForApi(
+  priority?: GoalPriority | string | null,
+): GoalPriority {
+  if (!priority) return "MEDIUM";
+  const str = String(priority).trim().toUpperCase();
+  if (
+    str === "LOW" ||
+    str === "MEDIUM" ||
+    str === "HIGH" ||
+    str === "CRITICAL"
+  ) {
+    return str as GoalPriority;
+  }
+  return str as GoalPriority;
+}
+
+export function formatDeadlineForApi(
+  deadline?: string | null,
+): string | null {
+  if (!deadline || !deadline.trim()) return null;
+  const d = new Date(deadline);
+  if (isNaN(d.getTime())) {
+    throw new APIError(
+      422,
+      "Invalid deadline format. Please provide a valid date.",
+      "VALIDATION_ERROR",
+    );
+  }
+  return d.toISOString();
 }
 
 export const goalService = {
@@ -57,11 +89,40 @@ export const goalService = {
   },
 
   async createGoal(payload: GoalCreatePayload): Promise<Goal> {
-    return apiClient.post<Goal>("/goals", payload);
+    const serializedPayload: GoalCreatePayload = {
+      ...payload,
+      title: payload.title.trim(),
+      objective: payload.objective.trim(),
+      description: payload.description ? payload.description.trim() : null,
+      priority: normalizePriorityForApi(payload.priority),
+      deadline: formatDeadlineForApi(payload.deadline),
+      success_criteria: payload.success_criteria || [],
+    };
+    return apiClient.post<Goal>("/goals", serializedPayload);
   },
 
   async updateGoal(id: string, payload: GoalUpdatePayload): Promise<Goal> {
-    return apiClient.patch<Goal>(`/goals/${id}`, payload);
+    const serializedPayload: GoalUpdatePayload = {
+      ...payload,
+      ...(payload.title !== undefined ? { title: payload.title.trim() } : {}),
+      ...(payload.objective !== undefined
+        ? { objective: payload.objective.trim() }
+        : {}),
+      ...(payload.description !== undefined
+        ? {
+            description: payload.description
+              ? payload.description.trim()
+              : null,
+          }
+        : {}),
+      ...(payload.priority !== undefined
+        ? { priority: normalizePriorityForApi(payload.priority) }
+        : {}),
+      ...(payload.deadline !== undefined
+        ? { deadline: formatDeadlineForApi(payload.deadline) }
+        : {}),
+    };
+    return apiClient.patch<Goal>(`/goals/${id}`, serializedPayload);
   },
 
   async deleteGoal(id: string): Promise<void> {

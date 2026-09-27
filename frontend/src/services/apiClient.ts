@@ -159,7 +159,7 @@ async function parseError(response: Response): Promise<APIError> {
   const status = response.status;
   let code: string | undefined;
   let message = `Request failed with status ${status}`;
-  let details: Record<string, unknown> | null = null;
+  let details: unknown = null;
   let requestId: string | undefined;
 
   try {
@@ -172,20 +172,86 @@ async function parseError(response: Response): Promise<APIError> {
     } else if (typeof data.detail === "string") {
       message = data.detail;
     } else if (Array.isArray(data.detail)) {
-      message = data.detail.map((d) => d.msg).join("; ");
-      details = { validation_errors: data.detail };
+      details = data.detail;
     } else if (data.message) {
       message = data.message;
+    }
+
+    // Granular 422 validation error formatting
+    if (status === 422) {
+      const valErrors: any[] | null = Array.isArray(details)
+        ? details
+        : Array.isArray((details as any)?.validation_errors)
+          ? (details as any).validation_errors
+          : Array.isArray(data.detail)
+            ? data.detail
+            : null;
+
+      if (valErrors && valErrors.length > 0) {
+        const errorStrings = valErrors
+          .map((err: any) => {
+            let field = "";
+            if (Array.isArray(err.loc)) {
+              field = err.loc
+                .filter(
+                  (p: string | number) =>
+                    p !== "body" && p !== "query" && p !== "path",
+                )
+                .join(".");
+            }
+            let msg = err.msg || "Invalid value";
+            if (typeof msg === "string" && msg.startsWith("Value error, ")) {
+              msg = msg.replace("Value error, ", "");
+            }
+            return field ? `${field}: ${msg}` : msg;
+          })
+          .filter(Boolean);
+
+        if (errorStrings.length > 0) {
+          message = errorStrings.join("; ");
+        }
+      } else if (!message || message === "Request validation failed") {
+        message = "Input validation failed. Please check the entered fields.";
+      }
+    } else if (status === 401) {
+      message =
+        data.error?.message &&
+        !data.error.message.toLowerCase().includes("unauthorized")
+          ? data.error.message
+          : "Your session has expired or you are unauthenticated. Please sign in again.";
+    } else if (status === 403) {
+      message =
+        data.error?.message &&
+        !data.error.message.toLowerCase().includes("forbidden")
+          ? data.error.message
+          : "Permission denied. You do not have access to perform this operation.";
+    } else if (status >= 500) {
+      message = "An unexpected server error occurred. Please try again later.";
     }
   } catch {
     // Response body not JSON or empty (e.g., Render HTML error pages)
     if (status === 503) {
-      message = "Backend service is currently suspended or spinning up on Render. Please check your Render dashboard to resume it.";
+      message =
+        "Backend service is currently suspended or spinning up. Please wait a moment and try again.";
     } else if (status === 404) {
-      message = "API endpoint not found. Please verify the backend service URL.";
+      message = "API endpoint or requested resource not found.";
+    } else if (status === 401) {
+      message = "Session expired or authentication failed. Please sign in again.";
+    } else if (status === 403) {
+      message = "Permission denied. You do not have access to perform this action.";
+    } else if (status >= 500) {
+      message = "An unexpected server error occurred. Please try again later.";
     } else {
       message = response.statusText || message;
     }
+  }
+
+  if (typeof console !== "undefined" && console.error) {
+    console.error(`[LifeThread API Error] ${status}: ${message}`, {
+      code,
+      details,
+      requestId,
+    });
   }
 
   return new APIError(status, message, code, details, requestId);

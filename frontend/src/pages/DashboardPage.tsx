@@ -130,32 +130,68 @@ export const DashboardPage: React.FC = () => {
       setNewObjective("");
       setNewPriority("medium");
       setNewDeadline("");
+      setFormError(null);
     },
     onError: (err: unknown) => {
       if (err instanceof APIError) {
-        setFormError(err.message);
+        if (err.status === 422) {
+          setFormError(
+            err.message || "Input validation failed. Please check the entered fields.",
+          );
+        } else if (err.status === 401) {
+          setFormError("Session expired. Please sign in again.");
+        } else if (err.status === 403) {
+          setFormError(
+            "Permission denied. You do not have access to perform this operation.",
+          );
+        } else if (err.status >= 500) {
+          setFormError("Internal server error. Please try again later.");
+        } else if (err.status === 0) {
+          setFormError("Connection error: Unable to reach backend service.");
+        } else {
+          setFormError(err.message);
+        }
       } else {
-        setFormError("Failed to create goal");
+        setFormError("Failed to create goal. Please review your inputs.");
       }
     },
   });
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newTitle.trim().length < 3) {
+    const cleanTitle = newTitle.trim();
+    const cleanObjective = newObjective.trim();
+
+    if (!cleanTitle || cleanTitle.length < 3) {
       setFormError("Title must be at least 3 characters");
       return;
     }
-    if (newObjective.trim().length < 5) {
+    if (!cleanObjective || cleanObjective.length < 5) {
       setFormError("Objective must be at least 5 characters");
       return;
     }
 
+    let deadlineIso: string | null = null;
+    if (newDeadline && newDeadline.trim()) {
+      const d = new Date(newDeadline);
+      if (isNaN(d.getTime())) {
+        setFormError("Invalid deadline date/time format");
+        return;
+      }
+      if (d.getTime() < Date.now() - 10 * 60 * 1000) {
+        setFormError("Goal deadline cannot be set in the past");
+        return;
+      }
+      deadlineIso = d.toISOString();
+    }
+
+    setFormError(null);
+
     createMutation.mutate({
-      title: newTitle.trim(),
-      objective: newObjective.trim(),
+      title: cleanTitle,
+      objective: cleanObjective,
       priority: newPriority,
-      deadline: newDeadline ? new Date(newDeadline).toISOString() : null,
+      deadline: deadlineIso,
       success_criteria: [],
     });
   };
@@ -164,8 +200,10 @@ export const DashboardPage: React.FC = () => {
   const goals: Goal[] = goalsData?.items || [];
   const summary = calculateOverallSummary(goals);
 
-  // Active goals list
-  const activeGoals = goals.filter((g) => g.status === "active");
+  // Active goals list (case-insensitive)
+  const activeGoals = goals.filter(
+    (g) => (g.status || "").toLowerCase() === "active",
+  );
 
   // Filter active goals by selected pill
   const filteredActiveGoals = activeGoals.filter((g) => {
