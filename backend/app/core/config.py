@@ -29,8 +29,11 @@ class Settings(BaseSettings):
     BACKEND_HOST: str = "0.0.0.0"
     BACKEND_PORT: int = 8000
     BACKEND_CORS_ORIGINS: list[str] = [
+        "https://lifethread-frontend.onrender.com",
+        "https://lifethread.onrender.com",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "http://localhost:3000",
     ]
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
@@ -50,7 +53,11 @@ class Settings(BaseSettings):
             return [i.strip() for i in v_strip.split(",") if i.strip()]
         elif isinstance(v, list):
             return [str(item) for item in v]
-        return ["*"]
+        return [
+            "https://lifethread-frontend.onrender.com",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+        ]
 
     # Database (PostgreSQL Connection Parameters)
     POSTGRES_USER: str = "lifethread_user"

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, Lock, Mail, Sparkles } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
@@ -6,6 +6,7 @@ import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { Alert } from "../components/ui/Alert";
 import { APIError } from "../types/api";
+import { apiClient } from "../services/apiClient";
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
@@ -16,6 +17,13 @@ export const LoginPage: React.FC = () => {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Non-blocking background health check to wake up sleeping container on Render
+    apiClient.get("/health", { skipAuth: true }).catch(() => {
+      // Ignored: silent background warmup
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -123,8 +123,10 @@ def create_application() -> FastAPI:
         allow_origins=settings.BACKEND_CORS_ORIGINS,
         allow_origin_regex=r"https://.*\.onrender\.com|https://.*\.vercel\.app|http://localhost:\d+|http://127\.0\.0\.1:\d+",
         allow_credentials=True,
-        allow_methods=["*"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
         allow_headers=["*"],
+        expose_headers=["Content-Length", "X-Request-ID"],
+        max_age=86400,
     )
 
     # 3. API Routers

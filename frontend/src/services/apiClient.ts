@@ -42,32 +42,59 @@ let refreshPromise: Promise<string | null> | null = null;
  * Resolves the backend API base URL:
  * 1. Checks VITE_API_URL or VITE_API_BASE_URL (configured via build/env)
  * 2. If running on deployed static hosting (e.g. *-frontend.*), dynamically derives the backend service URL
- * 3. Otherwise returns empty string (for local development with Vite dev proxy forwarding /api)
+ * 3. Prevents deployed production frontends from calling localhost
+ * 4. Corrects legacy or misconfigured URL (e.g. 'lifethread.onrender.com' instead of 'lifethread-backend.onrender.com')
+ * 5. Returns empty string for local development with Vite dev proxy forwarding /api
  */
 export function getApiBaseUrl(): string {
-  const envUrl =
+  let envUrl =
     (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL) ||
     (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL);
 
-  if (envUrl && typeof envUrl === "string" && envUrl.trim() !== "") {
-    return envUrl.trim().replace(/\/+$/, "");
+  if (typeof envUrl === "string") {
+    envUrl = envUrl.trim().replace(/\/+$/, "");
+  } else {
+    envUrl = "";
   }
 
-  // If in browser and on a deployed frontend host with 'frontend' in hostname,
-  // dynamically derive backend URL without hardcoding any specific host/domain
+  // If in browser environment
   if (typeof window !== "undefined" && window.location) {
     const { protocol, hostname, port } = window.location;
-    if (hostname !== "localhost" && hostname !== "127.0.0.1") {
-      if (hostname.includes("-frontend")) {
-        return `${protocol}//${hostname.replace("-frontend", "-backend")}${port ? `:${port}` : ""}`;
+    const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
+
+    // 1. If running in production (not localhost), never allow localhost/127.0.0.1 API URLs
+    if (!isLocalhost && (envUrl.includes("localhost") || envUrl.includes("127.0.0.1"))) {
+      envUrl = "";
+    }
+
+    // 2. If running on a deployed frontend host with '-frontend' (e.g. lifethread-frontend.onrender.com)
+    if (!isLocalhost && hostname.includes("-frontend")) {
+      const pairedBackendHost = hostname.replace("-frontend", "-backend");
+      const pairedBackendUrl = `${protocol}//${pairedBackendHost}${port ? `:${port}` : ""}`;
+
+      // If envUrl is empty, OR points to misconfigured legacy host without '-backend'
+      // (such as 'https://lifethread.onrender.com' instead of 'https://lifethread-backend.onrender.com')
+      if (
+        !envUrl ||
+        envUrl === `${protocol}//${hostname.replace("-frontend", "")}` ||
+        envUrl.includes("://lifethread.onrender.com")
+      ) {
+        return pairedBackendUrl;
       }
-      if (hostname.includes("frontend")) {
-        return `${protocol}//${hostname.replace("frontend", "backend")}${port ? `:${port}` : ""}`;
-      }
+    }
+
+    // 3. If envUrl is set and valid, use it
+    if (envUrl) {
+      return envUrl;
+    }
+
+    // 4. Fallback dynamic derivation for generic 'frontend' hostnames
+    if (!isLocalhost && hostname.includes("frontend")) {
+      return `${protocol}//${hostname.replace("frontend", "backend")}${port ? `:${port}` : ""}`;
     }
   }
 
-  return "";
+  return envUrl || "";
 }
 
 export function buildApiUrl(endpoint: string): string {
@@ -193,6 +220,12 @@ export async function request<T>(
   try {
     response = await fetch(url, config);
   } catch (networkError) {
+    if (typeof console !== "undefined" && console.error) {
+      console.error(`[LifeThread Network Error] Failed to reach backend API at: ${url}`, {
+        method: config.method || "GET",
+        error: networkError instanceof Error ? networkError.message : String(networkError),
+      });
+    }
     throw new APIError(
       0,
       networkError instanceof Error &&
@@ -232,7 +265,11 @@ export async function request<T>(
   }
 
   if (!response.ok) {
-    throw await parseError(response);
+    const error = await parseError(response);
+    if (typeof console !== "undefined" && console.warn) {
+      console.warn(`[LifeThread API Warning] ${response.status} from ${url}:`, error.message);
+    }
+    throw error;
   }
 
   if (response.status === 204) {
