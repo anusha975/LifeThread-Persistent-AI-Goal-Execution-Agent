@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, Lock, Mail, Sparkles } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/ui/Button";
@@ -10,6 +10,7 @@ import { APIError } from "../types/api";
 export const LoginPage: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,10 +29,17 @@ export const LoginPage: React.FC = () => {
 
     try {
       await login({ email, password });
-      navigate("/dashboard", { replace: true });
+      const rawFrom = (location.state as { from?: { pathname: string } })?.from?.pathname;
+      const destination =
+        rawFrom && rawFrom !== "/login" && rawFrom !== "/register"
+          ? rawFrom
+          : "/dashboard";
+      navigate(destination, { replace: true });
     } catch (err) {
       if (err instanceof APIError) {
         setErrorMessage(err.message || "Invalid email or password");
+      } else if (err instanceof Error) {
+        setErrorMessage(err.message);
       } else {
         setErrorMessage("Failed to sign in. Please verify your credentials.");
       }

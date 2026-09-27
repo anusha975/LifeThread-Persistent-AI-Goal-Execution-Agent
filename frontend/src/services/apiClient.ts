@@ -40,22 +40,33 @@ let refreshPromise: Promise<string | null> | null = null;
 
 /**
  * Resolves the backend API base URL:
- * 1. Checks VITE_API_BASE_URL (configured via build/env)
- * 2. If running on Render static hosting (*.onrender.com), falls back to the backend service URL
- * 3. Otherwise empty string (for local development with Vite dev proxy)
+ * 1. Checks VITE_API_URL or VITE_API_BASE_URL (configured via build/env)
+ * 2. If running on deployed static hosting (e.g. *-frontend.*), dynamically derives the backend service URL
+ * 3. Otherwise returns empty string (for local development with Vite dev proxy forwarding /api)
  */
 export function getApiBaseUrl(): string {
-  const envUrl = import.meta.env?.VITE_API_BASE_URL;
+  const envUrl =
+    (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL) ||
+    (typeof import.meta !== "undefined" && import.meta.env?.VITE_API_BASE_URL);
+
   if (envUrl && typeof envUrl === "string" && envUrl.trim() !== "") {
     return envUrl.trim().replace(/\/+$/, "");
   }
-  if (
-    typeof window !== "undefined" &&
-    window.location.hostname.endsWith(".onrender.com") &&
-    !window.location.hostname.includes("backend")
-  ) {
-    return "https://lifethread-backend.onrender.com";
+
+  // If in browser and on a deployed frontend host with 'frontend' in hostname,
+  // dynamically derive backend URL without hardcoding any specific host/domain
+  if (typeof window !== "undefined" && window.location) {
+    const { protocol, hostname, port } = window.location;
+    if (hostname !== "localhost" && hostname !== "127.0.0.1") {
+      if (hostname.includes("-frontend")) {
+        return `${protocol}//${hostname.replace("-frontend", "-backend")}${port ? `:${port}` : ""}`;
+      }
+      if (hostname.includes("frontend")) {
+        return `${protocol}//${hostname.replace("frontend", "backend")}${port ? `:${port}` : ""}`;
+      }
+    }
   }
+
   return "";
 }
 
@@ -184,9 +195,11 @@ export async function request<T>(
   } catch (networkError) {
     throw new APIError(
       0,
-      networkError instanceof Error
+      networkError instanceof Error &&
+        networkError.message !== "Failed to fetch" &&
+        networkError.message !== "Load failed"
         ? networkError.message
-        : "Network connection error",
+        : "Unable to connect to the LifeThread backend service. Please check your network connection or try again in a few moments.",
     );
   }
 

@@ -62,34 +62,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [fetchCurrentUser]);
 
   const login = async (payload: LoginPayload): Promise<void> => {
-    setIsLoading(true);
     try {
       const tokenResp = await authService.login(payload);
-      setToken(tokenResp.access_token);
+      storage.setToken(tokenResp.access_token);
+      if (tokenResp.refresh_token) {
+        storage.setRefreshToken(tokenResp.refresh_token);
+      }
       const userData = await authService.getMe();
       setUser(userData);
-    } finally {
-      setIsLoading(false);
+      setToken(tokenResp.access_token);
+    } catch (err) {
+      storage.clear();
+      setUser(null);
+      setToken(null);
+      throw err;
     }
   };
 
   const register = async (payload: RegisterPayload): Promise<User> => {
-    setIsLoading(true);
-    try {
-      return await authService.register(payload);
-    } finally {
-      setIsLoading(false);
-    }
+    return await authService.register(payload);
   };
 
   const logout = async (): Promise<void> => {
-    setIsLoading(true);
     try {
       await authService.logout();
     } finally {
+      storage.clear();
       setUser(null);
       setToken(null);
-      setIsLoading(false);
     }
   };
 

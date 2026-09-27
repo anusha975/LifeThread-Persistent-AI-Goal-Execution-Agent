@@ -59,6 +59,8 @@ export const RegisterPage: React.FC = () => {
     } catch (err) {
       if (err instanceof APIError) {
         setErrorMessage(err.message || "Registration failed");
+      } else if (err instanceof Error) {
+        setErrorMessage(err.message);
       } else {
         setErrorMessage("Failed to register account. Please try again.");
       }
