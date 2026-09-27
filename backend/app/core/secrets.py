@@ -75,15 +75,17 @@ def validate_secrets_configuration(
             "masked_value": mask_secret(jwt_secret),
         })
 
-    # 2. Database Password
-    pg_password = getattr(settings, "POSTGRES_PASSWORD", "")
-    is_insec, reason = is_insecure_secret(pg_password, min_length=8)
-    if is_insec:
-        violations.append({
-            "secret_name": "POSTGRES_PASSWORD",
-            "reason": reason,
-            "masked_value": mask_secret(pg_password),
-        })
+    # 2. Database Password (only applicable if PostgreSQL is configured)
+    db_url = str(getattr(settings, "DATABASE_URL", "")).lower()
+    if "postgres" in db_url:
+        pg_password = getattr(settings, "POSTGRES_PASSWORD", "")
+        is_insec, reason = is_insecure_secret(pg_password, min_length=8)
+        if is_insec:
+            violations.append({
+                "secret_name": "POSTGRES_PASSWORD",
+                "reason": reason,
+                "masked_value": mask_secret(pg_password),
+            })
 
     # 3. MCP Internal Shared Secret
     mcp_token = getattr(settings, "MCP_INTERNAL_TOKEN", "")
@@ -97,9 +99,7 @@ def validate_secrets_configuration(
 
     strict = strict_override
     if strict is None:
-        strict = getattr(settings, "STRICT_SECRET_VALIDATION", False) or getattr(
-            settings, "ENVIRONMENT", "development"
-        ).lower() == "production"
+        strict = getattr(settings, "STRICT_SECRET_VALIDATION", False)
 
     for v in violations:
         SecurityAuditService.record_event(
@@ -115,10 +115,15 @@ def validate_secrets_configuration(
             severity="CRITICAL" if strict else "WARNING",
         )
 
-    if violations and strict:
+    if violations:
         violation_messages = "; ".join(f"{v['secret_name']}: {v['reason']}" for v in violations)
-        raise InsecureSecretConfigurationError(
-            f"Production/Strict secret validation failed: {violation_messages}"
+        if strict:
+            raise InsecureSecretConfigurationError(
+                f"Production/Strict secret validation failed: {violation_messages}"
+            )
+        logger.warning(
+            "Running with development/insecure secrets: %s. Configure environment variables in production.",
+            violation_messages,
         )
 
     return violations

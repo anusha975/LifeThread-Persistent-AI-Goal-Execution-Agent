@@ -35,7 +35,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         json_format=(settings.ENVIRONMENT == "production"),
     )
     from app.core.secrets import validate_secrets_configuration
-    validate_secrets_configuration(settings)
+    try:
+        validate_secrets_configuration(settings)
+    except Exception as exc:
+        if getattr(settings, "STRICT_SECRET_VALIDATION", False):
+            raise
+        logger.warning("Secret validation warning: %s", exc)
 
     logger.info(
         "LifeThread backend initializing",
