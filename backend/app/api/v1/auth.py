@@ -4,6 +4,7 @@ from typing import Annotated
 
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+from pydantic import BaseModel, EmailStr
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -258,3 +259,56 @@ async def get_me(
 ) -> UserResponse:
     """Return profile for authenticated user."""
     return UserResponse.model_validate(current_user)
+
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+    new_password: str
+
+
+class AccountDeleteRequest(BaseModel):
+    email: EmailStr
+
+
+@router.post(
+    "/reset-password",
+    status_code=status.HTTP_200_OK,
+    summary="Reset User Password",
+)
+async def reset_password(
+    data: PasswordResetRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> dict[str, str]:
+    """Reset password for an existing account."""
+    query = select(User).where(func.lower(User.email) == data.email.lower())
+    result = await db.execute(query)
+    user = result.scalar_one_or_none()
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Account with this email does not exist",
+        )
+    user.password_hash = hash_password(data.new_password)
+    db.add(user)
+    await db.flush()
+    return {"message": "Password updated successfully"}
+
+
+@router.post(
+    "/delete-account",
+    status_code=status.HTTP_200_OK,
+    summary="Delete User Account",
+)
+async def delete_account_post(
+    data: AccountDeleteRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> dict[str, str]:
+    """Remove user account from database so it can be re-registered."""
+    query = select(User).where(func.lower(User.email) == data.email.lower())
+    result = await db.execute(query)
+    user = result.scalar_one_or_none()
+    if user:
+        await db.delete(user)
+        await db.flush()
+    return {"message": "Account removed successfully"}
+
