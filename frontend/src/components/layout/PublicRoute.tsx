@@ -21,7 +21,8 @@ export const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
 
   if (isAuthenticated) {
     // Redirect to previously requested protected page if available, or default to /dashboard
-    const rawFrom = (location.state as { from?: { pathname: string } })?.from?.pathname;
+    const rawFrom = (location.state as { from?: { pathname: string } })?.from
+      ?.pathname;
     const origin =
       rawFrom && rawFrom !== "/login" && rawFrom !== "/register"
         ? rawFrom

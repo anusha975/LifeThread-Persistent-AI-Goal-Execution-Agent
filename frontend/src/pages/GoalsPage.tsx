@@ -56,12 +56,7 @@ export const GoalsPage: React.FC = () => {
       if (data.description) setDescription(data.description);
       if (data.priority) {
         const p = data.priority.toLowerCase();
-        if (
-          p === "low" ||
-          p === "medium" ||
-          p === "high" ||
-          p === "critical"
-        ) {
+        if (p === "low" || p === "medium" || p === "high" || p === "critical") {
           setPriority(p as GoalPriority);
         }
       }
@@ -69,7 +64,9 @@ export const GoalsPage: React.FC = () => {
         try {
           const d = new Date(data.deadline);
           if (!isNaN(d.getTime())) {
-            const localIso = new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+            const localIso = new Date(
+              d.getTime() - d.getTimezoneOffset() * 60000,
+            )
               .toISOString()
               .slice(0, 16);
             setDeadline(localIso);
@@ -92,7 +89,9 @@ export const GoalsPage: React.FC = () => {
         } else if (err.status === 403) {
           setFormError("Permission denied.");
         } else if (err.status >= 500) {
-          setFormError("Backend error during goal understanding. Please enter parameters manually.");
+          setFormError(
+            "Backend error during goal understanding. Please enter parameters manually.",
+          );
         } else if (err.status === 0) {
           setFormError("Connection error: Unable to reach backend service.");
         } else {
@@ -139,7 +138,9 @@ export const GoalsPage: React.FC = () => {
         } else if (err.status === 401) {
           setFormError("Session expired. Please sign in again.");
         } else if (err.status === 403) {
-          setFormError("Permission denied. You do not have access to perform this operation.");
+          setFormError(
+            "Permission denied. You do not have access to perform this operation.",
+          );
         } else if (err.status >= 500) {
           setFormError("Internal server error. Please try again later.");
         } else if (err.status === 0) {

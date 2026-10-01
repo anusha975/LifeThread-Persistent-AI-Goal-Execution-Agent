@@ -63,7 +63,10 @@ export function getApiBaseUrl(): string {
     const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
 
     // 1. If running in production (not localhost), never allow localhost/127.0.0.1 API URLs
-    if (!isLocalhost && (envUrl.includes("localhost") || envUrl.includes("127.0.0.1"))) {
+    if (
+      !isLocalhost &&
+      (envUrl.includes("localhost") || envUrl.includes("127.0.0.1"))
+    ) {
       envUrl = "";
     }
 
@@ -103,7 +106,9 @@ export function buildApiUrl(endpoint: string): string {
   }
   const base = getApiBaseUrl();
   const normalized = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
-  const path = normalized.startsWith("/api") ? normalized : `/api/v1${normalized}`;
+  const path = normalized.startsWith("/api")
+    ? normalized
+    : `/api/v1${normalized}`;
   return `${base}${path}`;
 }
 
@@ -236,9 +241,11 @@ async function parseError(response: Response): Promise<APIError> {
     } else if (status === 404) {
       message = "API endpoint or requested resource not found.";
     } else if (status === 401) {
-      message = "Session expired or authentication failed. Please sign in again.";
+      message =
+        "Session expired or authentication failed. Please sign in again.";
     } else if (status === 403) {
-      message = "Permission denied. You do not have access to perform this action.";
+      message =
+        "Permission denied. You do not have access to perform this action.";
     } else if (status >= 500) {
       message = "An unexpected server error occurred. Please try again later.";
     } else {
@@ -287,10 +294,16 @@ export async function request<T>(
     response = await fetch(url, config);
   } catch (networkError) {
     if (typeof console !== "undefined" && console.error) {
-      console.error(`[LifeThread Network Error] Failed to reach backend API at: ${url}`, {
-        method: config.method || "GET",
-        error: networkError instanceof Error ? networkError.message : String(networkError),
-      });
+      console.error(
+        `[LifeThread Network Error] Failed to reach backend API at: ${url}`,
+        {
+          method: config.method || "GET",
+          error:
+            networkError instanceof Error
+              ? networkError.message
+              : String(networkError),
+        },
+      );
     }
     throw new APIError(
       0,
@@ -333,7 +346,10 @@ export async function request<T>(
   if (!response.ok) {
     const error = await parseError(response);
     if (typeof console !== "undefined" && console.warn) {
-      console.warn(`[LifeThread API Warning] ${response.status} from ${url}:`, error.message);
+      console.warn(
+        `[LifeThread API Warning] ${response.status} from ${url}:`,
+        error.message,
+      );
     }
     throw error;
   }

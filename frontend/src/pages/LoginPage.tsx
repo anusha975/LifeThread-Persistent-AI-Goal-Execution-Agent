@@ -37,7 +37,8 @@ export const LoginPage: React.FC = () => {
 
     try {
       await login({ email, password });
-      const rawFrom = (location.state as { from?: { pathname: string } })?.from?.pathname;
+      const rawFrom = (location.state as { from?: { pathname: string } })?.from
+        ?.pathname;
       const destination =
         rawFrom && rawFrom !== "/login" && rawFrom !== "/register"
           ? rawFrom

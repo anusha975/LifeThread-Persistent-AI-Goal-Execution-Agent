@@ -40,9 +40,7 @@ export function normalizePriorityForApi(
   return str as GoalPriority;
 }
 
-export function formatDeadlineForApi(
-  deadline?: string | null,
-): string | null {
+export function formatDeadlineForApi(deadline?: string | null): string | null {
   if (!deadline || !deadline.trim()) return null;
   const d = new Date(deadline);
   if (isNaN(d.getTime())) {

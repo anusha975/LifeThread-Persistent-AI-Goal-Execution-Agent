@@ -15,7 +15,11 @@ function AuthTestConsumer() {
   return (
     <div>
       <div data-testid="auth-status">
-        {isLoading ? "loading" : isAuthenticated ? "authenticated" : "unauthenticated"}
+        {isLoading
+          ? "loading"
+          : isAuthenticated
+            ? "authenticated"
+            : "unauthenticated"}
       </div>
       <div data-testid="user-email">{user?.email || "none"}</div>
       <button
@@ -65,12 +69,14 @@ describe("LifeThread Authentication Flow", () => {
     render(
       <AuthProvider>
         <AuthTestConsumer />
-      </AuthProvider>
+      </AuthProvider>,
     );
 
     // Initial state without token should be unauthenticated
     await waitFor(() => {
-      expect(screen.getByTestId("auth-status")).toHaveTextContent("unauthenticated");
+      expect(screen.getByTestId("auth-status")).toHaveTextContent(
+        "unauthenticated",
+      );
     });
 
     // Trigger login
@@ -78,8 +84,12 @@ describe("LifeThread Authentication Flow", () => {
 
     // After login, auth state becomes authenticated and user is populated
     await waitFor(() => {
-      expect(screen.getByTestId("auth-status")).toHaveTextContent("authenticated");
-      expect(screen.getByTestId("user-email")).toHaveTextContent("user@example.com");
+      expect(screen.getByTestId("auth-status")).toHaveTextContent(
+        "authenticated",
+      );
+      expect(screen.getByTestId("user-email")).toHaveTextContent(
+        "user@example.com",
+      );
     });
 
     expect(storage.getToken()).toBe("mock_jwt_access_token");
@@ -88,23 +98,27 @@ describe("LifeThread Authentication Flow", () => {
 
   it("CASE 2: Invalid credentials -> stay unauthenticated, token not saved", async () => {
     vi.spyOn(authService, "login").mockRejectedValue(
-      new APIError(401, "Incorrect email or password")
+      new APIError(401, "Incorrect email or password"),
     );
 
     render(
       <AuthProvider>
         <AuthTestConsumer />
-      </AuthProvider>
+      </AuthProvider>,
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId("auth-status")).toHaveTextContent("unauthenticated");
+      expect(screen.getByTestId("auth-status")).toHaveTextContent(
+        "unauthenticated",
+      );
     });
 
     screen.getByRole("button", { name: /trigger login/i }).click();
 
     await waitFor(() => {
-      expect(screen.getByTestId("auth-status")).toHaveTextContent("unauthenticated");
+      expect(screen.getByTestId("auth-status")).toHaveTextContent(
+        "unauthenticated",
+      );
     });
 
     expect(storage.getToken()).toBeNull();
@@ -127,12 +141,16 @@ describe("LifeThread Authentication Flow", () => {
     render(
       <AuthProvider>
         <AuthTestConsumer />
-      </AuthProvider>
+      </AuthProvider>,
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId("auth-status")).toHaveTextContent("authenticated");
-      expect(screen.getByTestId("user-email")).toHaveTextContent("returning@example.com");
+      expect(screen.getByTestId("auth-status")).toHaveTextContent(
+        "authenticated",
+      );
+      expect(screen.getByTestId("user-email")).toHaveTextContent(
+        "returning@example.com",
+      );
     });
   });
 
@@ -152,19 +170,21 @@ describe("LifeThread Authentication Flow", () => {
             <Route path="/login" element={<div>Login Page Screen</div>} />
           </Routes>
         </MemoryRouter>
-      </AuthProvider>
+      </AuthProvider>,
     );
 
     await waitFor(() => {
       expect(screen.getByText("Login Page Screen")).toBeInTheDocument();
-      expect(screen.queryByText("Protected Workspace Content")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Protected Workspace Content"),
+      ).not.toBeInTheDocument();
     });
   });
 
   it("CASE 6: Expired token on refresh -> clears storage and redirects to /login", async () => {
     storage.setToken("expired_stale_token");
     vi.spyOn(authService, "getMe").mockRejectedValue(
-      new APIError(401, "Invalid token")
+      new APIError(401, "Invalid token"),
     );
 
     render(
@@ -182,7 +202,7 @@ describe("LifeThread Authentication Flow", () => {
             <Route path="/login" element={<div>Login Page Screen</div>} />
           </Routes>
         </MemoryRouter>
-      </AuthProvider>
+      </AuthProvider>,
     );
 
     await waitFor(() => {
@@ -219,7 +239,7 @@ describe("LifeThread Authentication Flow", () => {
             <Route path="/dashboard" element={<div>Dashboard Content</div>} />
           </Routes>
         </MemoryRouter>
-      </AuthProvider>
+      </AuthProvider>,
     );
 
     await waitFor(() => {

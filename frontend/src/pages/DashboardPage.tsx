@@ -136,7 +136,8 @@ export const DashboardPage: React.FC = () => {
       if (err instanceof APIError) {
         if (err.status === 422) {
           setFormError(
-            err.message || "Input validation failed. Please check the entered fields.",
+            err.message ||
+              "Input validation failed. Please check the entered fields.",
           );
         } else if (err.status === 401) {
           setFormError("Session expired. Please sign in again.");

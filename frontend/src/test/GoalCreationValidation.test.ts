@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { goalService, normalizePriorityForApi, formatDeadlineForApi } from "../services/goalService";
+import {
+  goalService,
+  normalizePriorityForApi,
+  formatDeadlineForApi,
+} from "../services/goalService";
 import { apiClient } from "../services/apiClient";
 import { APIError } from "../types/api";
 
@@ -34,8 +38,10 @@ describe("Goal Creation & Validation Suite", () => {
       id: "test-goal-id",
       user_id: "test-user-id",
       title: "AI Engineer Interview Preparation",
-      objective: "Become interview-ready for an AI Engineer role within 10 days.",
-      description: "Prepare core Python, SQL, machine learning, LLM, RAG, and system design topics.",
+      objective:
+        "Become interview-ready for an AI Engineer role within 10 days.",
+      description:
+        "Prepare core Python, SQL, machine learning, LLM, RAG, and system design topics.",
       status: "ACTIVE",
       priority: "MEDIUM",
       deadline: "2026-10-15T09:00:00.000Z",
@@ -46,8 +52,10 @@ describe("Goal Creation & Validation Suite", () => {
 
     const result = await goalService.createGoal({
       title: "  AI Engineer Interview Preparation  ",
-      objective: "  Become interview-ready for an AI Engineer role within 10 days.  ",
-      description: "Prepare core Python, SQL, machine learning, LLM, RAG, and system design topics.",
+      objective:
+        "  Become interview-ready for an AI Engineer role within 10 days.  ",
+      description:
+        "Prepare core Python, SQL, machine learning, LLM, RAG, and system design topics.",
       priority: "medium",
       deadline: "2026-10-15T09:00:00.000Z",
     });
@@ -55,7 +63,9 @@ describe("Goal Creation & Validation Suite", () => {
     expect(postSpy).toHaveBeenCalledTimes(1);
     const calledPayload = postSpy.mock.calls[0][1] as any;
     expect(calledPayload.title).toBe("AI Engineer Interview Preparation");
-    expect(calledPayload.objective).toBe("Become interview-ready for an AI Engineer role within 10 days.");
+    expect(calledPayload.objective).toBe(
+      "Become interview-ready for an AI Engineer role within 10 days.",
+    );
     expect(calledPayload.priority).toBe("MEDIUM");
     expect(calledPayload.deadline).toBe("2026-10-15T09:00:00.000Z");
     expect(result.status).toBe("ACTIVE");
@@ -91,7 +101,9 @@ describe("Goal Creation & Validation Suite", () => {
     } catch (err: any) {
       expect(err).toBeInstanceOf(APIError);
       expect(err.status).toBe(422);
-      expect(err.message).toBe("priority: Input should be 'LOW', 'MEDIUM', 'HIGH' or 'CRITICAL'");
+      expect(err.message).toBe(
+        "priority: Input should be 'LOW', 'MEDIUM', 'HIGH' or 'CRITICAL'",
+      );
       expect(err.details).toEqual(mockValidationResponse.error.details);
     }
   });
@@ -101,7 +113,9 @@ describe("Goal Creation & Validation Suite", () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 401,
-      json: async () => ({ error: { code: "UNAUTHORIZED", message: "Token has expired" } }),
+      json: async () => ({
+        error: { code: "UNAUTHORIZED", message: "Token has expired" },
+      }),
     } as Response);
 
     try {
@@ -115,7 +129,9 @@ describe("Goal Creation & Validation Suite", () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 403,
-      json: async () => ({ error: { code: "FORBIDDEN", message: "Forbidden" } }),
+      json: async () => ({
+        error: { code: "FORBIDDEN", message: "Forbidden" },
+      }),
     } as Response);
 
     try {
@@ -129,14 +145,18 @@ describe("Goal Creation & Validation Suite", () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 500,
-      json: async () => ({ error: { code: "INTERNAL_SERVER_ERROR", message: "DB connection down" } }),
+      json: async () => ({
+        error: { code: "INTERNAL_SERVER_ERROR", message: "DB connection down" },
+      }),
     } as Response);
 
     try {
       await apiClient.get("/goals");
     } catch (err: any) {
       expect(err.status).toBe(500);
-      expect(err.message).toBe("An unexpected server error occurred. Please try again later.");
+      expect(err.message).toBe(
+        "An unexpected server error occurred. Please try again later.",
+      );
     }
   });
 });
